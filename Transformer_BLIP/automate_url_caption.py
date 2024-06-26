@@ -1,12 +1,12 @@
 import requests
+import time
 import os
 from dotenv import load_dotenv
 from PIL import Image
 from io import BytesIO
 from bs4 import BeautifulSoup
 from utils import load_blip_processor_and_model
-from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from concurrent.futures import ProcessPoolExecutor
 
 def parse_page_for_image_links(url:str) -> list:
 
@@ -94,8 +94,8 @@ if __name__ == "__main__":
     filtered_img_url_list = parse_page_for_image_links(url = url)
     print(f"Number of images to be captioned: {len(filtered_img_url_list)}")
 
-    # Set optimal max threads
-    MAX_THREADS = min(os.cpu_count(), len(filtered_img_url_list))
+    # Set optimal max threads (reserved 2 threads for cpu to cater to other uses)
+    MAX_THREADS = min(os.cpu_count() - 2, len(filtered_img_url_list))
     
     # Generate captions for each image url and save it into a text file in a defined filepath.
     parent_dir = os.environ.get("PYTHONPATH")
@@ -104,9 +104,13 @@ if __name__ == "__main__":
 
     caption_filepath = os.path.join(parent_dir,"generated_captions.txt")
     with open(caption_filepath, "w") as caption_file:
-        print(f"Using multithreading with {MAX_THREADS} threads to generate captions")
-        with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        print(f"Using multiprocessing with {MAX_THREADS} threads to generate captions")
+        time_start = time.time()
+        with ProcessPoolExecutor(max_workers=MAX_THREADS) as executor:
             captions_list = list(executor.map(generate_caption_for_urls, filtered_img_url_list))
+            print(captions_list)
+        time_end = time.time()
+        print(f"Time elapsed: {round(time_end - time_start, 2)}s")
+        print("Writing captions to file ...")
         for caption in captions_list:
-            caption_file.write(caption.title())
-            caption_file.write("")
+            caption_file.write(caption.title()+"\n")
