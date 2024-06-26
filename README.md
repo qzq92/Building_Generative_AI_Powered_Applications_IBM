@@ -73,7 +73,9 @@ python Transformer_BLIP/ImageCaptioning.py
     - Image
 - HuggingFace
     - Transformer models involving BlipProcessor, BlipForConditionalGeneration
-
+- Concurrence library
+    - Multiprocessing with 10 threads for image captioning
+        - 14 images took 254 seconds
 ## Acknowledgement and Credits
 
 The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications.
