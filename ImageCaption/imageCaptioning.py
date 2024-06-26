@@ -4,7 +4,6 @@ from PIL import Image
 from utils import load_blip_processor_and_model
 from dotenv import load_dotenv
 
-
 def open_image_in_rgb(img_filepath: str) -> Image:
     try:
         raw_image = Image.open(img_filepath).convert('RGB')
