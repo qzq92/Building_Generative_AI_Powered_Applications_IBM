@@ -2,23 +2,23 @@
 
 Repository containing codebase covering various GenAI apps based on "Building Generative AI-Powered Applications with Python" Coursera Course organised by IBM. 
 
-- Image Captioning
+- Image Captioning via Gradio Interface
+- Image Captioning on images retrieved from a specified URL.
 
 ## Environment file to edit
 
-Please create an *.env* file with the following parameters. PYTHONPATH is required to be filled to ensure successful folder imports in project.
+Please create an *.env* file with the following parameters.
 
 ```
 HUGGINGFACEHUB_API_TOKEN = <Your HuggingFaceHub API Token>
 BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-large"
-IMAGES_SOURCE_URL = <URL containing images>
 
-# Number of threads to use for multithreading execution when generating captions
-MAX_THREADS = "4"
+# Required if automate_url_caption.py script is run.
+IMAGES_SOURCE_URL = <URL containing images>
+PYTHONPATH = <Path to this repository which is downloaded>
 
 # Condition defining captions to be generated for images above specific resolution
 MIN_RES_PIXELS = "400"
-PYTHONPATH = <Path to where this repository is downloaded>
 
 # Required if you are running *ImageCaptioning.py* under *Transformer_BLIP/* folder
 VISUALQA_IMAGE_FILENAME = "demo_image.jpg"
@@ -29,7 +29,7 @@ TORCH_HUB_MODEL_NAME = "resnet18"
 MODEL_MAX_TOKEN = "300"
 
 # Gradio Config for Server and Port.
-GRADIO_SERVER_NAME = <Name of Server or IP Address, localhost for own development> # Eg "127.0.0.1"
+GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> # Eg "127.0.0.1"
 GRADIO_SERVER_PORT = <Your preferred port> # Eg "7860"
 ```
 
