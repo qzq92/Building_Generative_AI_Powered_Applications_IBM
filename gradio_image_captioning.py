@@ -6,12 +6,7 @@ from dotenv import load_dotenv
 if __name__ == "__main__":
     #Load dotenv
     load_dotenv()
-    # Construct full filepath
     
-    img_filepath_eg = os.path.join(os.getcwd(), "images", os.environ.get("VISUALQA_IMAGE_FILENAME"))
-    # Open image for processing
-    rgb_image = open_image_in_rgb(img_filepath=img_filepath_eg)
-
     processor, model = load_blip_processor_and_model(
     blip_model_name = os.environ.get("BLIP_MODEL_NAME")
 )
