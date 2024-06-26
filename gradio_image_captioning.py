@@ -1,6 +1,6 @@
 import gradio as gr
 import os
-from Transformer_BLIP.ImageCaptioning import open_image_in_rgb, load_blip_processor_and_model, generate_caption
+from Transformer_BLIP.ImageCaptioning import load_blip_processor_and_model, generate_caption
 from dotenv import load_dotenv
 
 if __name__ == "__main__":
