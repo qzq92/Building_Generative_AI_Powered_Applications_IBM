@@ -23,5 +23,5 @@ if __name__ == "__main__":
     iface.launch(
         share = False,
         server_name = os.environ.get("GRADIO_SERVER_NAME"),
-        server_port = int(os.environ.get("GRADIO_SERVER_PORT"))
+        server_port = int(os.environ.get("GRADIO_SERVER_PORT")),
     )
