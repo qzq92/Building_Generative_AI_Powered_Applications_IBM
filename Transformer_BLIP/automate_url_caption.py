@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # Load the pretrained processor and model
     processor, model = load_blip_processor_and_model(blip_model_name=os.environ.get("BLIP_MODEL_NAME"))
     # URL of the page to scrape
-    url = os.environ.get("SOURCE_URL_TO_SCRAPE")
+    url = os.environ.get("IMAGES_SOURCE_URL")
     filtered_img_url_list = parse_page_for_image_links(url = url)
 
     MAX_THREADS = os.environ.get("MAX_THREADS")
