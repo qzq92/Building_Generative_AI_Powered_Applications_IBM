@@ -1,4 +1,3 @@
-import requests
 import os
 import PIL
 from typing import Tuple
@@ -13,7 +12,7 @@ def load_blip_processor_and_model(blip_model_name: str = "Salesforce/blip-image-
         blip_model_name (str, optional): Blip model name to use. Defaults to "Salesforce/blip-image-captioning-large" model.
 
     Returns:
-        Tuple[BlipProcessor,BlipForConditionalGeneration]: _description_
+        Tuple[BlipProcessor,BlipForConditionalGeneration]: Pretrained BlipProcessor and BlipForConditionalGeneration classes.
     """
     processor = BlipProcessor.from_pretrained(blip_model_name)
     
@@ -87,4 +86,5 @@ if __name__ == "__main__":
         print(caption)
     
     else:
-        print("No image can be found ")
+        caption = "No image can be found, hence no caption would be generated."
+        print(caption)
