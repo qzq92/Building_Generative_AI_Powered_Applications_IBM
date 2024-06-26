@@ -5,6 +5,7 @@ Repository containing codebase covering various GenAI apps based on "Building Ge
 - Image Captioning
 
 ## Environment file to edit
+
 Please create an *.env* file with the following parameters. PYTHONPATH is required to be filled to ensure successful folder imports in project.
 
 ```
@@ -28,6 +29,7 @@ GRADIO_SERVER_PORT = <Your preferred port> # Eg "7860"
 For more information on Langsmith, refer to https://www.langchain.com/langsmith
 
 ## Installation and execution
+
 Please use Anaconda distribution to install the necessary libraries with the following command
 
 ```
@@ -67,4 +69,4 @@ python Transformer_BLIP/ImageCaptioning.py
 
 ## Acknowledgement and Credits
 
-The codebase developed are in reference to the "Building Generative AI-Powered Applications with Python" https://www.coursera.org/learn/building-gen-ai-powered-applications.
+The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications.
