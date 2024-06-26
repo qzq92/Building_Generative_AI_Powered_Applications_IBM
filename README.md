@@ -11,6 +11,13 @@ Please create an *.env* file with the following parameters. PYTHONPATH is requir
 ```
 HUGGINGFACEHUB_API_TOKEN = <Your HuggingFaceHub API Token>
 BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-large"
+IMAGES_SOURCE_URL = <URL containing images>
+
+# Number of threads to use for multithreading execution when generating captions
+MAX_THREADS = "4"
+
+# Condition defining captions to be generated for images above specific resolution
+MIN_RES_PIXELS = "400"
 PYTHONPATH = <Path to where this repository is downloaded>
 
 # Required if you are running *ImageCaptioning.py* under *Transformer_BLIP/* folder
