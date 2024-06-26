@@ -46,7 +46,17 @@ def parse_page_for_image_links(url:str) -> list:
     return filtered_img_elements
 
 
-def generate_caption_for_urls(img_url: list, processor: Any, model: Any) -> str:
+def generate_caption_for_urls(img_url: list) -> str:
+    """Function which generates caption for given url using loaded BLIP processor and model.
+
+    Args:
+        img_url (list): _description_
+
+    Returns:
+        str: String formatted k:v pair, with k representing image url, and v representing the caption generated.
+    """
+    # Load the pretrained processor and model
+    processor, model = load_blip_processor_and_model(blip_model_name=os.environ.get("BLIP_MODEL_NAME"))
     try:
         # Download the image
         response = requests.get(img_url)
@@ -56,7 +66,7 @@ def generate_caption_for_urls(img_url: list, processor: Any, model: Any) -> str:
         img_res = raw_image.size[0] * raw_image.size[1]
         # Skip very small resolution
         if img_res < int(os.environ.get("MIN_RES_PIXELS")):
-            caption = "Image resolution too small to be processed by config"
+            caption = "Image resolution too small to be processed by config.\n"
         else:
             raw_image = raw_image.convert('RGB')
 
@@ -67,32 +77,36 @@ def generate_caption_for_urls(img_url: list, processor: Any, model: Any) -> str:
             # Decode the generated tokens to text
             caption = processor.decode(out[0], skip_special_tokens=True)
 
-        output_str = f"{img_url}: {caption}\n"
+        output_str = f"{img_url}: {caption}.\n"
         return output_str
     
     # Catch all general exception with common output string construct
     except Exception as e:
-        error_caption = f"Error processing image file due to {e}"
-        output_str = f"{img_url}: {error_caption}\n"
+        error_caption = f"Error processing image file due to {e}."
+        output_str = f"{img_url}: {error_caption}"
         return output_str
 
 if __name__ == "__main__":
     # Load sys environment
     load_dotenv()
-    # Load the pretrained processor and model
-    processor, model = load_blip_processor_and_model(blip_model_name=os.environ.get("BLIP_MODEL_NAME"))
     # URL of the page to scrape
     url = os.environ.get("IMAGES_SOURCE_URL")
     filtered_img_url_list = parse_page_for_image_links(url = url)
+    print(f"Number of images to be captioned: {len(filtered_img_url_list)}")
 
-    MAX_THREADS = os.environ.get("MAX_THREADS")
+    # Set optimal max threads
+    MAX_THREADS = min(os.cpu_count(), len(filtered_img_url_list))
     
-    # Open a file and write generated captions in a new txt file in the same directory
-    with open("generated_captions.txt", "w") as caption_file:
-        print("Using multithreading to generate captions")
+    # Generate captions for each image url and save it into a text file in a defined filepath.
+    parent_dir = os.environ.get("PYTHONPATH")
+    if not parent_dir:
+        parent_dir = os.getcwd()
 
-        iterables = [filtered_img_url_list, processor, model]
+    caption_filepath = os.path.join(parent_dir,"generated_captions.txt")
+    with open(caption_filepath, "w") as caption_file:
+        print(f"Using multithreading with {MAX_THREADS} threads to generate captions")
         with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-            captions = list(executor.map(generate_caption_for_urls, iterables))
-        
-        caption_file.write(captions)
+            captions_list = list(executor.map(generate_caption_for_urls, filtered_img_url_list))
+        for caption in captions_list:
+            caption_file.write(caption.title())
+            caption_file.write("")
