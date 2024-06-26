@@ -1,9 +1,11 @@
 # Simple Generative AI Powered Applications
 
-Repository containing codebase covering various GenAI apps based on "Building Generative AI-Powered Applications with Python" Coursera Course organised by IBM. 
+Repository containing codebase covering various GenAI module applications based on "Building Generative AI-Powered Applications with Python" Coursera Course organised by IBM. 
 
-- Image Captioning via Gradio Interface
-- Image Captioning on images retrieved from a specified URL.
+1. Image Captioning
+    - Gradio Interface UI for uploading image to perform captioning
+    - Python script for generating captions on all available images retrieved from a specified UI.
+2. Simple Chatbot
 
 ## Environment file to edit
 
@@ -16,24 +18,29 @@ BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-large"
 # Required if automate_url_caption.py script is run.
 IMAGES_SOURCE_URL = <URL containing images>
 PYTHONPATH = <Path to this repository which is downloaded>
+MODEL_MAX_TOKEN = <Max token allowed for LLM completion for all LLM models> 
 
 # Condition defining captions to be generated for images above specific resolution
-MIN_RES_PIXELS = "400"
+MIN_RES_PIXELS = <Number of images pixels required to allow captions to be generated>
 
-# Required if you are running *ImageCaptioning.py* under *Transformer_BLIP/* folder
-VISUALQA_IMAGE_FILENAME = "demo_image.jpg"
+# Required if you are running *imagecaptioning.py* under *ImageCaption/* folder
+VISUALQA_IMAGE_FILENAME = <Files under *images* subfolder> #e.g. "demo_image.jpg" 
 
 # For Image classification **(Required if you are running the gradio_image_classification.py for image classification models)**
 TORCH_HUB_MODEL_DIRECTORY = "pytorch/vision:v0.6.0"
-TORCH_HUB_MODEL_NAME = "resnet18"
-MODEL_MAX_TOKEN = "300"
+TORCH_HUB_MODEL_NAME = <Torch Hub Model name> #eg resnet18
+
+# For Chatbot. Please select a model that can be executed on your computer.
+CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
 
 # Gradio Config for Server and Port.
 GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> # Eg "127.0.0.1"
 GRADIO_SERVER_PORT = <Your preferred port> # Eg "7860"
-```
 
-For more information on Langsmith, refer to https://www.langchain.com/langsmith
+# FLASK CONFIG. SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. SERVER_PORT DEFAULTS to 5000 if empty.
+FLASK_SERVER_NAME = "127.0.0.1"
+FLASK_SERVER_PORT = "5001"
+```
 
 ## Installation and execution
 
@@ -46,7 +53,7 @@ conda env create -f environment.yml
 Upon installation and environment exectuion, run the following command to start Gradio interface.
 
 ```
-python gradio_image_captioning.py
+python ImageCaption/run_gradio_image_upload_captioning
 ```
 
 You should see a Gradio UI as follows:
@@ -67,6 +74,7 @@ python Transformer_BLIP/ImageCaptioning.py
 
 ## Programming languages/tools involved
 - Python
+- Flask
 - Gradio
     - Interface
     - Textbox
@@ -78,4 +86,4 @@ python Transformer_BLIP/ImageCaptioning.py
         - 14 images took 254 seconds
 ## Acknowledgement and Credits
 
-The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications.
+The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications, and also IBM's LLM Application Chatbot Github Repository for the webpage template provided for the Chatbot module, accessible https://github.com/ibm-developer-skills-network/LLM_application_chatbot.
