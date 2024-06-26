@@ -19,10 +19,10 @@ if __name__ == "__main__":
     # Define gradio interface
     iface = gr.Interface(
         fn=generate_caption,
-        inputs=[gr.Image(type="pil"), gr.Textbox()],
-        outputs="text",
-        title="Image Captioning with BLIP",
-        description="Upload an image to generate a caption."
+        inputs=[gr.Image(type="pil", show_label=False), gr.Textbox(placeholder="Text prompt to guide caption generation", label="Text Prompt")],
+        outputs=gr.Textbox(label="Generated Caption"),
+        title="Image Captioning with BLIP Model",
+        description="Upload an image file and input text (optional) in the text bar under 'text_prompt' to generate a caption."
     )
     # Launch interface without creating public link
     iface.launch(
