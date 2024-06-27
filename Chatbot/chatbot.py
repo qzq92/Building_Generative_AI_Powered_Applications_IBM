@@ -28,7 +28,9 @@ if __name__ == "__main__":
 
         
         # Gnerate output and decode
-        outputs = model.generate(**inputs, max_length=os.environ.get("MODEL_MAX_TOKEN"))
+        outputs = model.generate(
+            **inputs,
+            max_length=int(os.environ.get("MODEL_MAX_TOKEN")))
         response = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
 
         # Append to conversation history
