@@ -49,9 +49,8 @@ def get_response_for_input(
     # Generate the response from the model
     outputs = model.generate(
         **inputs,
-        temperature = 0,
+        temperature = float(os.environ.get("TEMPERATURE")),
         do_sample=True,
-        top_k = 10, 
         early_stopping = True,
         max_length = int(os.environ.get("MODEL_MAX_LENGTH"))
     )  # max_length will cause model to crash at some point as history grows
