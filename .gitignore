@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Certs
-certs/rootCA.crt
+VoiceAssistant/certs/rootCA.crt
 
 # Env file
 .env
