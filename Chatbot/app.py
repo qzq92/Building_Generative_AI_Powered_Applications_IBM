@@ -12,7 +12,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Home page of Flask service to display index.html.
-@app.route('/chatbot', methods=['GET'])
+@app.route('/', methods=['GET'])
 def home():
     return render_template("index.html")
 
@@ -63,7 +63,8 @@ def handle_prompt() -> str:
 if __name__ == '__main__':
     load_dotenv()
     app.run(
-        debug=True,
-        host=os.environ.get("FLASK_SERVER_NAME"),
-        port=os.environ.get("FLASK_SERVER_PORT")
+        debug = True,
+        host = os.environ.get("FLASK_SERVER_NAME"),
+        port = int(os.environ.get("FLASK_SERVER_PORT")),
+        load_dotenv = True
     )
