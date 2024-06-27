@@ -5,7 +5,10 @@ Repository containing codebase covering various GenAI module applications based 
 1. Image Captioning
     - Gradio Interface UI for uploading image to perform captioning
     - Python script for generating captions on all available images retrieved from a specified UI.
+
 2. Simple Chatbot
+    - Frontend interface supported by HTML, Javascript and Flask
+    - Backend chat service supported by the use of HuggingFaceHub model loaded into PC.
 
 ## Environment file to edit
 
@@ -117,6 +120,38 @@ Ensure that you have executed above command to get flask running. Then execute a
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are you today?"}' <Flask Server Host>:<Port>/chatbot
 ```
+## 3. Voice Assistant
+
+
+### 3.1 Place RootCA cert in the certs folder
+
+This is a prerequisite for docker build process listed in 3.2.
+
+If you are in Linux machine, do the following
+```
+cp /usr/local/share/ca-certificates/rootCA.crt /home/project/chatapp-with-voice-and-openai/certs/
+```
+
+For Windows, refer to the steps for extracting certificates.
+
+RootCA extraction steps for Windows reference:
+(https://help.zscaler.com/deception/exporting-root-ca-certificate-active-directory-certificate-service)
+
+In particular, the specific cert required is illustrated below
+
+The cert to export is highlighted below:
+![RootCert](images/RootCert_Export_Windows.png)
+
+### 3.2 Run docker image with the following (build/rebuild if needed)
+
+Ensure that your docker engine is active.
+
+```
+docker build . -t voice-chatapp-powered-by-openai
+docker run -p 8000:8000 voice-chatapp-powered-by-openai
+```
+
+
 
 ## Programming languages/tools involved
 - Python
@@ -134,4 +169,12 @@ curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are 
 
 ## Acknowledgement and Credits
 
-The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications, and also IBM's LLM Application Chatbot Github Repository for the webpage template provided for the Chatbot module, accessible https://github.com/ibm-developer-skills-network/LLM_application_chatbot.
+The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications.
+
+Additional acknowledgement for different sections:
+
+Chatbot module webpage template: [IBM's LLM Application Chatbot Github Repository](https://github.com/ibm-developer-skills-network/LLM_application_chatbot)
+
+Voice assistant webpage template: [Arora-R](https://github.com/arora-r/chatapp-with-voice-and-openai-outline)
+
+RootCert Export: [RootCert-Export steps for Windows](https://help.zscaler.com/deception/exporting-root-ca-certificate-active-directory-certificate-service)
