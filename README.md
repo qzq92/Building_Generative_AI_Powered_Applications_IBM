@@ -71,11 +71,11 @@ python run_gradio_image_upload_captioning.py
 
 You should see a Gradio UI as follows:
 
-![SampleUI](images/SampleUI.png)
+![SampleImageCaptionUI](images/SampleImageCaptionUI.png)
 
 **A working example with generated caption**
 
-![SampleWorkingExample](images/SampleUI_w_Caption.png)
+![SampleImageCaptionWorkingExample](images/SampleImageCaptionUI_working.png)
 
 ** For experimentation purpose with caption models generated output without Gradio **
 
@@ -90,6 +90,8 @@ python imagecaptioning.py
 
 Suggested chatbot model from HuggingFace that can be loaded on to your PC would be *facebook/blenderbot-400M-distill*. It is known to outperforms existing models in terms of longer conversations over multiple sessions and is more knowledgeable and has more factual consistency, according to human evaluators. (Source: [ParlAI](https://parl.ai/projects/blenderbot2/#:~:text=A%20chatbot%20with%20its%20own,consistency%2C%20according%20to%20human%20evaluators.))
 
+**Disclaimer: You may need to configure *TEMPERATURE* environment to control chatbot responses. As this is just a simple project, the chatbot is not meant to be provide perfectly great responses and the result of such is largely dependent on the input chat message provided and other model configurations.**
+
 ```
 cd Chatbot/
 python app.py
@@ -100,6 +102,12 @@ OR
 cd Chatbot/
 flask run -h <host Name/IP> -p <port>
 ```
+
+You should see a sample chatbot interface below:
+![SampleChatbotUI](images/SampleChatbotUI.png)
+
+A demonstration example of how conversation would be like:
+![SampleChatbotConversation](images/SampleChatBotInteraction.png)
 
 To terminate program, press 'Ctrl' + 'C'.
 
