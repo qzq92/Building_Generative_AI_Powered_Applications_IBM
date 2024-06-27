@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from utils import load_model_tokenizer_and_clean_convo_hist
+from utils import load_model_tokenizer_and_clean_convo_hist, get_response_for_input
 import os
 
 """
@@ -23,16 +23,14 @@ if __name__ == "__main__":
 
         # Seek user input prompt
         input_text = input("> ")
-        # Encode history to tokens
-        inputs = tokenizer.encode_plus(history_string, input_text, return_tensors="pt")
 
+        # Pass into a function containing LLM model/tokenizer, history, and input to retrieve LLM completion.
+        response = get_response_for_input(
+            tokenizer = tokenizer,
+            model = model,
+            history = history_string,
+            input_text = input_text)
         
-        # Gnerate output and decode
-        outputs = model.generate(
-            **inputs,
-            max_length=int(os.environ.get("MODEL_MAX_TOKEN")))
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
-
         # Append to conversation history
         conversation_history.append(input_text)
         conversation_history.append(response)
