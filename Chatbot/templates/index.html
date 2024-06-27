@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chatbot</title>
-    <meta name="author" content="J.C. Chen">
+    <meta name="author" content="Z.Q.Quek">
     <!-- <link rel="stylesheet" href="css/style.css" /> -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- <link rel="shortcut icon" href='favicon.ico' type="image/x-icon">
@@ -13,9 +13,9 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
   </head>
+
   <!--end general information-->
   <body>
-
     <!-- <header>
       <div class="color-block"></div>
     </header> -->
@@ -24,10 +24,11 @@
     <main>  
       <div class="chatbot">
         <div class="chat-header">
-          <h1>My LLM</h1>
+          <h1>Simple LLM Chatbot Application</h1>
         </div>
         <div class="header-sub-text">
-          <p>Copyright © JC 2023 - Created by JC with <a class="purple">❤</a></p>
+          <p>Please chat using the message input box below to start chatting with chatbot.</p>
+          <p><b>Disclaimer: This is just an exploratory app. Note that performance would degrade as chat progresses.</b></p>
         </div>
 
         <div class="spacer" id="messages-container"></div>
