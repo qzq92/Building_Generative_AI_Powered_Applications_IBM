@@ -1,7 +1,7 @@
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from typing import Tuple
 
-def load_model_tokenizer_and_clean_convo_hist(model_name:str, token:str) -> Tuple(AutoModelForSeq2SeqLM, AutoTokenizer, list):
+def load_model_tokenizer_and_clean_convo_hist(model_name:str, token:str) -> Tuple[AutoModelForSeq2SeqLM, AutoTokenizer, list]:
     """Function which loads transformers library AutoModelForSeq2SeqLM, AutoTokenizer based on model and input token and returns them together with an empty list of conversation history.
 
     Args:
