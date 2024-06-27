@@ -24,22 +24,32 @@ MODEL_MAX_TOKEN = <Max token allowed for LLM completion for all LLM models>
 MIN_RES_PIXELS = <Number of images pixels required to allow captions to be generated>
 
 # Required if you are running *imagecaptioning.py* under *ImageCaption/* folder
-VISUALQA_IMAGE_FILENAME = <Files under *images* subfolder> #e.g. "demo_image.jpg" 
+VISUALQA_IMAGE_FILENAME = <Files under *images* subfolder> #E.g. "demo_image.jpg" 
 
 # For Image classification **(Required if you are running the gradio_image_classification.py for image classification models)**
 TORCH_HUB_MODEL_DIRECTORY = "pytorch/vision:v0.6.0"
-TORCH_HUB_MODEL_NAME = <Torch Hub Model name> #eg resnet18
+TORCH_HUB_MODEL_NAME = <Torch Hub Model name> #E.g resnet18
 
 # For Chatbot. Please select a model that can be executed on your computer.
 CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
 
 # Gradio Config for Server and Port.
 GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> # Eg "127.0.0.1"
-GRADIO_SERVER_PORT = <Your preferred port> # Eg "7860"
+GRADIO_SERVER_PORT = <Your preferred port> #E.g "7860"
 
 # FLASK CONFIG. SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. SERVER_PORT DEFAULTS to 5000 if empty.
-FLASK_SERVER_NAME = "127.0.0.1"
-FLASK_SERVER_PORT = "5001"
+FLASK_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> # Eg "127.0.0.1"
+FLASK_SERVER_PORT = <Your preferred port> #E.g "7860"
+```
+
+Corresponding Javascipt to be edited (For chatbot app only)
+
+```
+async function makePostRequest(msg) {
+    const url = "http://<Flask Server Name>:<Port>/chatbot";  // Make a POST request to this url
+    const requestBody = {
+      prompt: msg
+    };
 ```
 
 ## Installation and execution
@@ -50,10 +60,13 @@ Please use Anaconda distribution to install the necessary libraries with the fol
 conda env create -f environment.yml
 ```
 
-Upon installation and environment exectuion, run the following command to start Gradio interface.
+Upon installation and environment exectuion, please run the relevant command based on the app required to run.
+
+### 1. Image Captioning
 
 ```
-python ImageCaption/run_gradio_image_upload_captioning
+cd ImageCaption/
+python run_gradio_image_upload_captioning.py
 ```
 
 You should see a Gradio UI as follows:
@@ -64,16 +77,36 @@ You should see a Gradio UI as follows:
 
 ![SampleWorkingExample](images/SampleUI_w_Caption.png)
 
-### For experimentation purpose with caption models generated output without Gradio
+** For experimentation purpose with caption models generated output without Gradio **
 
 Please run the following command in the repository main folder
 
 ```
-python Transformer_BLIP/ImageCaptioning.py
+cd ImageCaption/
+python imagecaptioning.py
+```
+
+### 2. Simple Chatbot
+
+Suggested chatbot model from HuggingFace that can be loaded on to your PC would be *facebook/blenderbot-400M-distill*. It is known to outperforms existing models in terms of longer conversations over multiple sessions and is more knowledgeable and has more factual consistency, according to human evaluators. (Source: [ParlAI](https://parl.ai/projects/blenderbot2/#:~:text=A%20chatbot%20with%20its%20own,consistency%2C%20according%20to%20human%20evaluators.))
+
+```
+cd Chatbot/
+flask run 
+```
+
+To terminate program, press 'Ctrl' + 'C'.
+
+**Testing of chatbot response with curl**
+Ensure that you have executed above command to get flask running. Then execute an example command below
+
+```
+curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are you today?"}' <Flask Server Host>:<Port>/chatbot
 ```
 
 ## Programming languages/tools involved
 - Python
+- JavaScript
 - Flask
 - Gradio
     - Interface
@@ -84,6 +117,7 @@ python Transformer_BLIP/ImageCaptioning.py
 - Concurrence library
     - Multiprocessing with 10 threads for image captioning
         - 14 images took 254 seconds
+
 ## Acknowledgement and Credits
 
 The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications, and also IBM's LLM Application Chatbot Github Repository for the webpage template provided for the Chatbot module, accessible https://github.com/ibm-developer-skills-network/LLM_application_chatbot.
