@@ -35,7 +35,8 @@ def generate_caption(
 
         outputs = model.generate(**inputs, max_new_tokens=int(os.environ.get("MODEL_MAX_TOKEN")))
 
-        raw_caption = processor.decode(outputs[0], skip_special_tokens=True)
+        raw_caption = str(processor.decode(outputs[0], skip_special_tokens=True))
+        raw_caption = raw_caption.capitalize() + "."
         return raw_caption
     
     except Exception as err:
