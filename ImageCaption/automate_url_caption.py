@@ -113,4 +113,4 @@ if __name__ == "__main__":
         print(f"Time elapsed: {round(time_end - time_start, 2)}s")
         print("Writing captions to file ...")
         for caption in captions_list:
-            caption_file.write(caption.title()+"\n")
+            caption_file.write(caption.capitalize()+"\n")
