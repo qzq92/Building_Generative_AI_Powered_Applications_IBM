@@ -122,7 +122,6 @@ curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are 
 ```
 ## 3. Voice Assistant
 
-
 ### 3.1 Place RootCA cert in the certs folder
 
 This is a prerequisite for docker build process listed in 3.2.
