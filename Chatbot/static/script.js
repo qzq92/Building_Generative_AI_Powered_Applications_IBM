@@ -96,6 +96,7 @@ const sendMessage = async (message) => {
 
 //Section: Button to submit to the model and get the response
 messageForm.addEventListener('submit', async (event) => {
+  // cancel default action if needed
   event.preventDefault();
   const message = messageInput.value.trim();
   if (message !== '') {
@@ -108,10 +109,6 @@ messageForm.addEventListener('keypress', async (event) => {
   // If user presses "Enter" key on keyboard
   if (event.key === "Enter"){
     event.preventDefault();
-    const message = messageInput.value.trim();
-    if (message !== '') {
-      messageInput.value = '';
-      await sendMessage(message);
-    }
+    document.getElementById("myBtn").click();
   }
 });
