@@ -64,7 +64,7 @@ if __name__ == '__main__':
     load_dotenv()
     app.run(
         debug = True,
-        host = os.environ.get("FLASK_SERVER_NAME"),
-        port = int(os.environ.get("FLASK_SERVER_PORT")),
+        host = os.environ.get("FLASK_RUN_HOST"),
+        port = int(os.environ.get("FLASK_RUN_PORT")),
         load_dotenv = True
     )
