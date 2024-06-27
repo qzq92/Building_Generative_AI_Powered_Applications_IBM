@@ -7,7 +7,7 @@ const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 //
 
-//Section: function to creat the dialogue window
+//Section: function to create the dialogue window
 const addMessage = (message, role, imgSrc) => {
   // creat elements in the dialogue window
   const messageElement = document.createElement('div');
@@ -101,5 +101,17 @@ messageForm.addEventListener('submit', async (event) => {
   if (message !== '') {
     messageInput.value = '';
     await sendMessage(message);
+  }
+});
+
+messageForm.addEventListener('keypress', async (event) => {
+  // If user presses "Enter" key on keyboard
+  if (event.key === "Enter"){
+    event.preventDefault();
+    const message = messageInput.value.trim();
+    if (message !== '') {
+      messageInput.value = '';
+      await sendMessage(message);
+    }
   }
 });
