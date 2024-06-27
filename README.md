@@ -38,8 +38,8 @@ GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> # Eg "127.0.0
 GRADIO_SERVER_PORT = <Your preferred port> #E.g "7860"
 
 # FLASK CONFIG. SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. SERVER_PORT DEFAULTS to 5000 if empty.
-FLASK_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> # Eg "127.0.0.1"
-FLASK_SERVER_PORT = <Your preferred port> #E.g "7860"
+FLASK_RUN_HIST = <Host Name/IP> # Eg "127.0.0.1"
+FLASK_RUN_PORT = <Your preferred port> #E.g "7860"
 ```
 
 Corresponding Javascipt to be edited (For chatbot app only)
@@ -92,7 +92,13 @@ Suggested chatbot model from HuggingFace that can be loaded on to your PC would 
 
 ```
 cd Chatbot/
-flask run 
+python app.py
+```
+
+OR
+```
+cd Chatbot/
+flask run -h <host Name/IP> -p <port>
 ```
 
 To terminate program, press 'Ctrl' + 'C'.
