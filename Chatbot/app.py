@@ -1,8 +1,8 @@
+from utils import load_model_tokenizer_and_clean_convo_hist
 from flask import Flask, request, render_template
 from flask_cors import CORS
 from flask import request
 from dotenv import load_dotenv
-from utils import load_model_tokenizer_and_clean_convo_hist
 import os
 import json
 
@@ -11,7 +11,7 @@ app = Flask(__name__)
 # to mitigate CORS errors - a type of error related to making requests to domains other than the one that hosts this webpage.
 CORS(app)
 
-# Landing page of Flask service.
+# Home page of Flask service to display index.html.
 @app.route('/chatbot', methods=['GET'])
 def home():
     return render_template("index.html")
@@ -35,18 +35,21 @@ def handle_prompt() -> str:
 
     # Load model,tokenizer and convo history
     model, tokenizer, conversation_history = load_model_tokenizer_and_clean_convo_hist(
-        model_name=model_name,
-        token=hface_auth_token
+        model_name = model_name,
+        token = hface_auth_token
     )
 
     # Create conversation history string
     history = "\n".join(conversation_history)
 
-    # Tokenize the input text and history
+    # Tokenize the input text and history with encode_plus method from tokenizer
     inputs = tokenizer.encode_plus(history, input_text, return_tensors="pt")
 
     # Generate the response from the model
-    outputs = model.generate(**inputs, max_length=os.environ.get("MODEL_MAX_TOKEN"))  # max_length will acuse model to crash at some point as history grows
+    outputs = model.generate(
+        **inputs,
+        max_length = int(os.environ.get("MODEL_MAX_TOKEN"))
+    )  # max_length will acuse model to crash at some point as history grows
 
     # Decode the response
     response = tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
