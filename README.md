@@ -7,8 +7,12 @@ Repository containing codebase covering various GenAI module applications based 
     - Python script for generating captions on all available images retrieved from a specified UI.
 
 2. Simple Chatbot
-    - Frontend interface supported by HTML, Javascript and Flask
+    - Frontend interface supported by HTML, Javascript and Flask scripts
     - Backend chat service supported by the use of HuggingFaceHub model loaded into PC.
+
+3. Voice Assistant Chatbot
+    - Frontend interface supported by HTML, Javascript and Flask scripts
+    - Backend chat service supported by the use of Speech-to-Text, Text-to-Speech and OpenAI Chat Models
 
 ## Environment file to create and edit
 
@@ -132,13 +136,14 @@ curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are 
 
 ### 3A. Simple transcription service with OpenAI model experimentation setup via Gradio Frontend
 
-You may can either upload your own mp3 file or use a sample mp3 file provided which are sourced from
+You may can either upload your own mp3 file or use a sample mp3 file provided which are sourced from the following links:
 
 1) **Archived LiveATC Recordings** [link](https://www.liveatc.net/recordings.php) - Expect poor performance due to background noise 
 
 2) **Ted Talks Daily Trailer** [link](https://audiocollective.ted.com/#shows-1) - Expect good performance due to clear audio, without background noise.
 
-Run the following command in the repository
+
+To run, execute the following command in the repository
 
 ```
 cd VoiceAssistant/experimentations
@@ -153,34 +158,7 @@ Sample audio transcription from file:
 
 Disclaimer: Do expect transcription in accuracies as results are largely dependent on the quality and length of audio file.  
 
-### 3.1 Place RootCA cert in the certs folder
-
-This is a prerequisite for docker build process listed in 3.2.
-
-If you are in Linux machine, do the following
-```
-cp /usr/local/share/ca-certificates/rootCA.crt /home/project/chatapp-with-voice-and-openai/certs/
-```
-
-For Windows, refer to the steps for extracting certificates.
-
-RootCA extraction steps for Windows reference:
-(https://help.zscaler.com/deception/exporting-root-ca-certificate-active-directory-certificate-service)
-
-In particular, the specific cert required is illustrated below
-
-The cert to export is highlighted below:
-![RootCert](images/RootCert_Export_Windows.png)
-
-### 3.2 Run docker image with the following (build/rebuild if needed)
-
-Ensure that your docker engine is active.
-
-```
-docker build . -t voice-chatapp-powered-by-openai
-docker run -p 8000:8000 voice-chatapp-powered-by-openai
-```
-
+### 3B. Simple VoiceAssistant application
 
 
 ## Programming languages/tools involved
