@@ -1,15 +1,15 @@
 from openai import OpenAI
 from dotenv import load_dotenv
-from transformers import WhisperProcessor, WhisperForConditionalGeneration
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
-from typing
+from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
+from typing import Any
+from datetime import datetime
 import requests
 import os
-
+import soundfile as sf
+import torch
 load_dotenv()
 
 openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
 
 def speech_to_text(audio_binary: list) -> str:
     """The function simply takes audio_binary as the only parameter and then sends it in the body of the HTTP request.
@@ -20,44 +20,116 @@ def speech_to_text(audio_binary: list) -> str:
     Returns:
         str: _description_
     """
-    print(audio_binary)
-    model = WhisperForConditionalGeneration.from_pretrained(
-        pretrained_model_name_or_path=os.environ.get("STT_MODEL_NAME")
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+
+    stt_model = os.environ.get("STT_MODEL_NAME")
+
+    if not stt_model or stt_model == "":
+        stt_model = "openai/whisper-small"
+    
+    if stt_model.startswith("openai/whisper"):
+        model = WhisperForConditionalGeneration.from_pretrained(
+            pretrained_model_name_or_path=stt_model 
+        )
+        processor = WhisperProcessor.from_pretrained(
+            pretrained_model_name_or_path=stt_model
+        )
+        input_features = processor(
+            audio_binary, sampling_rate=44100, return_tensors="pt"
+        ).input_features
+        
+        # Generate token ids and decode them (returns a list)
+        predicted_ids = model.generate(input_features)
+        transcription = processor.batch_decode(
+            predicted_ids, skip_special_tokens=True
+        )
+        print(transcription)
+
+        return transcription[0]
+    # Assume other models that is not from OpenAI
+    model = AutoModelForSpeechSeq2Seq.from_pretrained(
+        pretrained_model_name_or_path=stt_model,
+        torch_dtype=torch_dtype,
+        low_cpu_mem_usage=True,
+        use_safetensors=True
     )
-    processor = WhisperProcessor.from_pretrained(
-        pretrained_model_name_or_path=os.environ.get("STT_MODEL_NAME")
+    model.to(device)
+
+    processor = AutoProcessor.from_pretrained(
+        pretrained_model_name_or_path=stt_model
     )
 
-    input_features = processor(
-        audio_binary, sampling_rate=44100, return_tensors="pt"
-    ).input_features 
-
-
-    predicted_ids = model.generate(input_features)
-    transcription = processor.batch_decode(
-        predicted_ids, skip_special_tokens=True
+    pipe = pipeline(
+        task="automatic-speech-recognition",
+        model=model,
+        tokenizer=processor.tokenizer,
+        feature_extractor=processor.feature_extractor,
+        torch_dtype=torch_dtype,
+        max_new_tokens=128,
+        device=device,
     )
-    print(transcription)
 
-    return transcription[0]
+    result = pipe(audio_binary)
+    return result["text"]
 
-def text_to_speech(text: str):
+def text_to_speech_infer_endpoints(input_text: str) -> Any:
+    """Function which calls TTS model as a service through inference endpoint API to perform text to speech generation.
 
-    # Set the headers for our HTTP request
+    Args:
+        input_text (str): Input text to be synthesized.
+    """
+        # Set the headers for our HTTP request
     headers = {
-        'Accept': 'audio/wav',
-        'Content-Type': 'application/json',
+        "Authorization": f"Bearer {os.environ.get("HUGGINGFACEHUB_API_TOKEN")}"
     }
-    # Set the body of our HTTP request
-    json_data = {
-        'text': text,
-    }
-    # Send a HTTP Post request to Watson Text-to-Speech Service
-    # response = requests.post(url=api_url, headers=headers, json=json_data)
-    print('Text to speech response:', response)
 
-    # Return audio data
+    model_name = os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
+    inference_base_api = "https://api-inference.huggingface.co/models/"
+    api_end_point = inference_base_api + model_name
+
+    # Set the body of our HTTP request
+    request_payload = {
+        "text_inputs": input_text,
+    }
+
+    response = requests.post(
+        url=api_end_point,
+        headers=headers,
+        json=request_payload,
+        timeout=15
+    )
+    print('text to speech response:', response)
     return response.content
+
+def text_to_speech_direct_inference(input_text: str) -> Any:
+    """Function which synthesizes input text into audio using HuggingFace's transformer pipeline for direct inferencing.
+
+    Args:
+        input_text (str): Input text to be synthesized
+
+    Returns:
+        Any: Synthesized Speech object.
+    """
+    synthesizer = pipeline(
+        task="text-to-speech",
+        model=os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
+    )
+
+    speech = synthesizer(inputs=input_text)
+
+    tts_audio_files_dir = "tts_audio_files"
+    os.makedirs(tts_audio_files_dir, exist_ok=True)
+
+    # Write audio file after synthesizing
+    datetime_now_fmt = datetime.now().strftime('%Y%m%d_%H%M%S')
+    tts_audio_filename =  f"speech_{datetime_now_fmt}"
+    sf.write(tts_audio_filename, speech["audio"], samplerate=speech["sampling_rate"])
+
+    response = synthesizer(inputs=input_text)
+    print(response)
+    print(type(response))
+    return response
 
 def openai_process_message(user_message: str) -> str:
     """Function which processes user message with OpenAI models and generates completion as response.
