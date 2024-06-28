@@ -109,7 +109,7 @@ flask run -h <host Name/IP> -p <port>
 You should see a sample chatbot interface below:
 ![SampleChatbotUI](images/SampleChatbotUI.png)
 
-A demonstration example of how conversation would be like:
+A demonstration example of how conversation would be as follows:
 ![SampleChatbotConversation](images/SampleChatBotInteraction.png)
 
 To terminate program, press 'Ctrl' + 'C'.
@@ -121,6 +121,21 @@ Ensure that you have executed above command to get flask running. Then execute a
 curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are you today?"}' <Flask Server Host>:<Port>/chatbot
 ```
 ## 3. Voice Assistant
+
+
+### 3A. Simple transcription service with OPENAI model experimentation setup via Gradio Frontend
+
+You may can either upload your own mp3 file or use a sample mp3 file provided that is obtained from **Archived LiveATC Recordings** link [here](https://www.liveatc.net/recordings.php)
+
+Run the following command in the repository
+
+```
+cd VoiceAssistant/experimentations
+python gradio_interface.py
+```
+
+Access the Gradio Interface via the host IP/Port specified as seen below follow:
+![SampleTranscriptionService](images/SampleGradioTranscriptionUI.png)
 
 ### 3.1 Place RootCA cert in the certs folder
 
