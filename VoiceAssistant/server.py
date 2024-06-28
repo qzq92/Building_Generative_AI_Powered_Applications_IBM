@@ -50,20 +50,34 @@ def process_message_route():
     # Clean the response to remove any emptylines
     openai_response_text = os.linesep.join([s for s in openai_response_text.splitlines() if s])
 
+    print(f"Generated ChatModel response: {openai_response_text}. Synthesizing to speech...")
     # Call our text_to_speech function to convert OpenAI Api's reponse to speech
     # The openai_response_speech is a type of audio data, we can't directly send this inside a json as it can only store textual data
     openai_response_speech = text_to_speech(openai_response_text)
 
-    print(openai_response_speech)    
+    print(openai_response_speech)
     # # convert openai_response_speech to base64 string so it can be sent back in the JSON response
     # openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
     # Send a JSON response back to the user containing their message's response both in text and speech formats
-    response = app.response_class(
-        response=json.dumps({"openaiResponseText": openai_response_text, "openaiResponseSpeech": openai_response_speech}),
-        status=200,
-        mimetype='application/json'
-    )
-    print(response)
+    if "error" in dict(openai_response_speech):
+        print("Error in generating synthesizing text to speech. Response will not have any speech")
+    
+        response = app.response_class(
+            response=json.dumps({
+                "openaiResponseText": openai_response_text,
+            }),
+            status=200,
+            mimetype='application/json'
+        )
+    else:
+        response = app.response_class(
+            response=json.dumps({
+                "openaiResponseText": openai_response_text,
+                "openaiResponseSpeech": openai_response_speech
+            }),
+            status=200,
+            mimetype='application/json'
+        )
     return response
 
 if __name__ == "__main__":

@@ -104,27 +104,33 @@ def text_to_speech(input_text: str) -> json:
             "Authorization": f"Bearer {os.environ.get("HUGGINGFACEHUB_API_TOKEN")}"
         }
 
-        model_id = os.environ.get("HUGGINGFACE_TTS_ENDPOINT_MODEL_NAME")
+        model_id = os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
         api_end_point = f"https://api-inference.huggingface.co/models/{model_id}"
-        response = requests.post(
-            url=api_end_point,
-            headers=headers,
-            json=input_text,
-            timeout=300
-        )
+        try:
+            response = requests.post(
+                url=api_end_point,
+                headers=headers,
+                json=input_text,
+                timeout=300
+            )
 
-        response.raise_for_status()
-        if response.status_code == 500:
-            print("API Endpoint may be unavailable.")
-        if response.status_code != 200:
-            print(f"Encounter error of status code: {response.status_code}.")
-        
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as errh:
+            print("Encountered Server error:", errh)
+        except requests.exceptions.ConnectionError as errc:
+            print("Error Connecting:",errc)
+        except requests.exceptions.Timeout as errt:
+            print("Timeout Error:",errt)
+        except requests.exceptions.RequestException as err:
+            print("Request exception error",err)
+
         return response.json()
 
+    print("Running inference offline....")
     # If not api call
     synthesizer = pipeline(
         task="text-to-speech",
-        model=os.environ.get("HUGGINGFACE_TTS_OFFLINE_MODEL_NAME")
+        model=os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
     )
 
     speech = synthesizer(inputs=input_text)
