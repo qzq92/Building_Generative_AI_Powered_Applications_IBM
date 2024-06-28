@@ -20,7 +20,8 @@ def transcribe_speech(filepath: str) -> str:
             model="whisper-1",
             response_format="text",
         )
-        return transcript.words
+        return transcript
+    
     except AuthenticationError:
         error_str = "Authentication error encountered. Unable to transcribe."
         return error_str
@@ -40,24 +41,28 @@ def start_gradio_interface(host:str, port:int):
         theme="NoCrypt/miku"
     )
 
+    microphone_interface_title = "Click on 'Record' to start recording your speech for transcription."
     # Interface for microphone transcription. Ensure that your browser has access to microphone on the device hosting gradio
     mic_transcribe = gr.Interface(
-        fn=transcribe_speech,
-        inputs=gr.Audio(sources="microphone", type="filepath"),
-        outputs=gr.Textbox(),
+        fn = transcribe_speech,
+        title = microphone_interface_title,
+        inputs = gr.Audio(sources="microphone", type="filepath"),
+        outputs = gr.Textbox(),
     )
 
+    file_upload_interface_title = "Upload your audio files here (currently limited to 25 MB) Supported file types: mp3, mp4, mpeg, mpga, m4a, wav, and webm)"
     # Interface for file upload
     file_transcribe = gr.Interface(
-        fn=transcribe_speech,
-        title="Upload your audio files here (currently limited to 25 MB) Supported file types: mp3, mp4, mpeg, mpga, m4a, wav, and webm)",
-        inputs=gr.Audio(sources="upload", type="filepath"),
-        outputs=gr.Textbox(),
+        fn = transcribe_speech,
+        title = file_upload_interface_title,
+        inputs = gr.Audio(sources="upload", type="filepath"),
+        outputs = gr.Textbox(),
     )
     with demo:
+        # Construct tab interface with above
         gr.TabbedInterface(
-            [mic_transcribe, file_transcribe],
-            ["Transcribe Microphone", "Transcribe Audio File"],
+            interface_list = [mic_transcribe, file_transcribe],
+            tab_names = ["Transcribe From Microphone", "Transcribe Uploaded Audio File"],
         )
 
     demo.launch(debug=True, server_name=host, server_port=port, share=False)
