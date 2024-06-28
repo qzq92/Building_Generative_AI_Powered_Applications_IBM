@@ -30,15 +30,18 @@ MODEL_CAPTION_MAX_TOKEN = "300"
 
 # For Chatbot. Please select a model that can fit and run on your computer.
 CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
-TEMPERATURE = "0.5" # Anything above 0 but less than 1
-MODEL_CHATBOT_MAX_LENGTH = "80"
+CHATBOT_MODEL_TEMPERATURE = "0.8" # Anything above 0 but less than 1
+CHATBOT_MODEL_MAX_LENGTH = "80"
 
 # For VoiceAssistant:
 # Refer to https://huggingface.co/models?pipeline_tag=automatic-speech-recognition. For long form transcription, please use "distil-whisper/distil-large-v3"
 HUGGINGFACE_STT_MODEL_NAME = "openai/whisper-small"
+HUGGINGFACE_STT_MODEL_MAX_TOKEN = "128"
+HUGGINGFACE_STT_MODEL_TEMPERATURE = "0.0"
 
 # Refer to models page https://huggingface.co/models?pipeline_tag=text-to-speech
 HUGGINGFACE_TTS_MODEL_NAME  = "microsoft/speecht5_tts"
+TTS_API_CALL_ENABLED = "1" # 1: yes, other values means no
 
 # Gradio Config for Server and Port.
 GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> #E.g "127.0.0.1"
