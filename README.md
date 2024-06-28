@@ -41,7 +41,10 @@ HUGGINGFACE_STT_MODEL_TEMPERATURE = "0.0"
 
 # Refer to models page https://huggingface.co/models?pipeline_tag=text-to-speech
 HUGGINGFACE_TTS_MODEL_NAME  = "microsoft/speecht5_tts"
-TTS_API_CALL_ENABLED = "1" # 1: yes, other values means no
+TTS_API_CALL_ENABLED = "1" # will route tts model use to above. Other value will mean offline inference
+
+# For offline use
+HUGGINGFACE_TTS_OFFLINE_MODEL_NAME  = "suno/bark-small"
 
 # Gradio Config for Server and Port.
 GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> #E.g "127.0.0.1"
