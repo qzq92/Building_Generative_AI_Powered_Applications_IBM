@@ -16,11 +16,14 @@ def transcribe_speech(filepath: str) -> str:
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         audio_file = open(filepath, "rb")
         transcript = client.audio.transcriptions.create(
-            file=audio_file,
-            model="whisper-1",
-            response_format="text",
+            file = audio_file,
+            language="en",
+            temperature=0.1,
+            model = "whisper-1",
         )
-        return transcript
+
+        processed_transcript = str(transcript.text).strip()
+        return processed_transcript
     
     except AuthenticationError:
         error_str = "Authentication error encountered. Unable to transcribe."
@@ -38,7 +41,7 @@ def start_gradio_interface(host:str, port:int):
     """
     demo = gr.Blocks(
         title="OpenAI Transcription with Gradio",
-        theme="NoCrypt/miku"
+        theme="NoCrypt/miku",
     )
 
     microphone_interface_title = "Click on 'Record' to start recording your speech for transcription."
@@ -47,7 +50,14 @@ def start_gradio_interface(host:str, port:int):
         fn = transcribe_speech,
         title = microphone_interface_title,
         inputs = gr.Audio(sources="microphone", type="filepath"),
-        outputs = gr.Textbox(),
+        outputs = gr.Textbox(
+            max_lines=10,
+            placeholder="Transcription of speech",
+            show_copy_button=True,
+            label="Transcription",
+            show_label=True,
+            type="text"),
+        allow_flagging="never"
     )
 
     file_upload_interface_title = "Upload your audio files here (currently limited to 25 MB) Supported file types: mp3, mp4, mpeg, mpga, m4a, wav, and webm)"
@@ -56,15 +66,22 @@ def start_gradio_interface(host:str, port:int):
         fn = transcribe_speech,
         title = file_upload_interface_title,
         inputs = gr.Audio(sources="upload", type="filepath"),
-        outputs = gr.Textbox(),
+        outputs = gr.Textbox(
+            max_lines=10,
+            placeholder="Transcription of audio files",
+            show_copy_button=True,
+            label="Transcription",
+            show_label=True,
+            type="text"),
+        allow_flagging="never"
     )
     with demo:
         # Construct tab interface with above
         gr.TabbedInterface(
             interface_list = [mic_transcribe, file_transcribe],
             tab_names = ["Transcribe From Microphone", "Transcribe Uploaded Audio File"],
-        )
-
+            )
+    # Launch
     demo.launch(debug=True, server_name=host, server_port=port, share=False)
 
 if __name__ == "__main__":
