@@ -10,7 +10,7 @@ def transcribe_speech(filepath: str) -> str:
         filepath (str): File containing audio recordings.
 
     Returns:
-        str: Transcribed speech if API key for OpenAI is authenticated. Else, return error string.
+        str: Transcribed speech if API key for OpenAI is authenticated. Else, return error string based on exception encountered.
     """
     try:
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -18,12 +18,14 @@ def transcribe_speech(filepath: str) -> str:
         transcript = client.audio.transcriptions.create(
             file=audio_file,
             model="whisper-1",
-            response_format="verbose_json",
-            timestamp_granularities=["word"]
+            response_format="text",
         )
         return transcript.words
     except AuthenticationError:
         error_str = "Authentication error encountered. Unable to transcribe."
+        return error_str
+    except TypeError:
+        error_str = "Encountered TypeError when transcribing, please check if you have uploaded correct file or if your file is corrupted."
         return error_str
     
 def start_gradio_interface(host:str, port:int):
@@ -48,6 +50,7 @@ def start_gradio_interface(host:str, port:int):
     # Interface for file upload
     file_transcribe = gr.Interface(
         fn=transcribe_speech,
+        title="Upload your audio files here (currently limited to 25 MB) Supported file types: mp3, mp4, mpeg, mpga, m4a, wav, and webm)",
         inputs=gr.Audio(sources="upload", type="filepath"),
         outputs=gr.Textbox(),
     )
