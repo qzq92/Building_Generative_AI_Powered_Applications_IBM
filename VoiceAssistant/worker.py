@@ -1,15 +1,14 @@
+import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
-from typing import Any
 from datetime import datetime
 import requests
 import os
 import soundfile as sf
 import torch
-load_dotenv()
 
-openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+load_dotenv()
 
 def speech_to_text(audio_binary: list) -> str:
     """The function simply takes audio_binary as the only parameter and then sends it in the body of the HTTP request.
@@ -89,40 +88,43 @@ def speech_to_text(audio_binary: list) -> str:
     result = pipe(audio_binary)
     return result["text"]
 
-def text_to_speech(input_text: str) -> Any:
+def text_to_speech(input_text: str) -> json:
     """Function which calls TTS model as a service through inference endpoint API to perform text to speech generation.
 
     Args:
         input_text (str): Input text to be synthesized.
+
+    Returns:
+        json: Response in json object.
     """
     if os.environ.get("TTS_API_CALL_ENABLED") == "1":
+        print("Using API calls for Text-to-speech synthesization\n")
         # Set the headers for our HTTP request
         headers = {
             "Authorization": f"Bearer {os.environ.get("HUGGINGFACEHUB_API_TOKEN")}"
         }
 
-        model_name = os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
-        inference_base_api = "https://api-inference.huggingface.co/models/"
-        api_end_point = inference_base_api + model_name
-
-        # Set the body of our HTTP request
-        request_payload = {
-            "text_inputs": input_text,
-        }
-
+        model_id = os.environ.get("HUGGINGFACE_TTS_ENDPOINT_MODEL_NAME")
+        api_end_point = f"https://api-inference.huggingface.co/models/{model_id}"
         response = requests.post(
             url=api_end_point,
             headers=headers,
-            json=request_payload,
-            timeout=15
+            json=input_text,
+            timeout=300
         )
-        print('text to speech response:', response)
-        return response.content
+
+        response.raise_for_status()
+        if response.status_code == 500:
+            print("API Endpoint may be unavailable.")
+        if response.status_code != 200:
+            print(f"Encounter error of status code: {response.status_code}.")
+        
+        return response.json()
 
     # If not api call
     synthesizer = pipeline(
         task="text-to-speech",
-        model=os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
+        model=os.environ.get("HUGGINGFACE_TTS_OFFLINE_MODEL_NAME")
     )
 
     speech = synthesizer(inputs=input_text)
@@ -141,7 +143,7 @@ def text_to_speech(input_text: str) -> Any:
     return response
 
 def openai_process_message(user_message: str) -> str:
-    """Function which processes user message with OpenAI models and generates completion as response.
+    """Function which processes user message input with OpenAI models and generates completion as response.
 
     Args:
         user_message (str): User provided message in string.
@@ -152,6 +154,8 @@ def openai_process_message(user_message: str) -> str:
     # Set the prompt for OpenAI Api
     prompt = "Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations."
     # Call the OpenAI Api to process our prompt
+    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
     openai_response = openai_client.chat.completions.create(
         model = os.environ.get("OPENAI_MODEL_NAME"),
         messages = [
@@ -160,7 +164,7 @@ def openai_process_message(user_message: str) -> str:
         ],
         max_tokens = int(os.environ.get("OPENAI_MAX_TOKEN", "4000"))
     )
-    print("openai response:", openai_response)
+
     # Parse the response to get the response message for our prompt
     response_text = openai_response.choices[0].message.content
     return response_text
