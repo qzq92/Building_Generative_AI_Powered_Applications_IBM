@@ -150,7 +150,7 @@ cd VoiceAssistant/experimentations
 python gradio_interface.py
 ```
 
-Access the Gradio Interface via the host IP/Port specified as seen below:
+Access the Gradio Interface via the host IP/Port specified and you should see a frontend like below:
 ![SampleTranscriptionService](images/SampleGradioTranscriptionUI.png)
 
 Sample audio transcription from file:
@@ -160,6 +160,15 @@ Disclaimer: Do expect transcription in accuracies as results are largely depende
 
 ### 3B. Simple VoiceAssistant application
 
+Run the following command to start the Flask service
+
+```
+python run VoiceAssistant/server.py
+```
+
+Access the Flask Interface via the host IP/Port specified and you should see a frontend like below:
+
+![SampleVoiceAssistantService](images/SampleVoiceAssistantUI.png)
 
 ## Programming languages/tools involved
 - Python
