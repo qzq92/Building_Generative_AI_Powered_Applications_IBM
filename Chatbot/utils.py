@@ -2,7 +2,6 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from typing import Tuple
 import os 
 
-
 def load_model_tokenizer_and_clean_convo_hist(model_name:str, token:str) -> Tuple[AutoModelForSeq2SeqLM, AutoTokenizer, list]:
     """Function which loads transformers library AutoModelForSeq2SeqLM, AutoTokenizer based on model and input token and returns them together with an empty list of conversation history.
 
@@ -52,7 +51,7 @@ def get_response_for_input(
         temperature = float(os.environ.get("TEMPERATURE")),
         do_sample=True,
         early_stopping = True,
-        max_length = int(os.environ.get("MODEL_MAX_LENGTH"))
+        max_length = int(os.environ.get("MODEL_CHATBOT_MAX_LENGTH"))
     )  # max_length will cause model to crash at some point as history grows
 
     # Decode the response
