@@ -10,38 +10,42 @@ Repository containing codebase covering various GenAI module applications based 
     - Frontend interface supported by HTML, Javascript and Flask
     - Backend chat service supported by the use of HuggingFaceHub model loaded into PC.
 
-## Environment file to edit
+## Environment file to create and edit
 
-Please create an *.env* file with the following parameters.
+Include the following parameters. Please enter your API Token keys where necessary.
 
 ```
-HUGGINGFACEHUB_API_TOKEN = <Your HuggingFaceHub API Token>
+OPENAI_API_KEY = <YOUR API TOKEN>
+OPENAI_MAX_TOKEN = "4000"
+OPENAI_MODEL_NAME = "gpt-3.5-turbo"
+HUGGINGFACEHUB_API_TOKEN = <YOUR API TOKEN>
+PYTHONPATH =
+
+# For Image Captioning
 BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-large"
+VISUALQA_IMAGE_FILENAME = "demo_image.jpg" ## For imagecaptioning.py use
+IMAGES_SOURCE_URL = "https://en.wikipedia.org/wiki/IBM" ## For automate_url_caption.py use
+MIN_RES_PIXELS = "400"
+MODEL_CAPTION_MAX_TOKEN = "300"
 
-# Required if automate_url_caption.py script is run.
-IMAGES_SOURCE_URL = <URL containing images>
-PYTHONPATH = <Path to this repository which is downloaded>
-MODEL_MAX_TOKEN = <Max token allowed for LLM completion for all LLM models> 
-
-# Condition defining captions to be generated for images above specific resolution
-MIN_RES_PIXELS = <Number of images pixels required to allow captions to be generated>
-
-# Required if you are running *imagecaptioning.py* under *ImageCaption/* folder
-VISUALQA_IMAGE_FILENAME = <Files under *images* subfolder> #E.g. "demo_image.jpg" 
-
-# For Image classification **(Required if you are running the gradio_image_classification.py for image classification models)**
-TORCH_HUB_MODEL_DIRECTORY = "pytorch/vision:v0.6.0"
-TORCH_HUB_MODEL_NAME = <Torch Hub Model name> #E.g resnet18
-
-# For Chatbot. Please select a model that can be executed on your computer.
+# For Chatbot. Please select a model that can fit and run on your computer.
 CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
+TEMPERATURE = "0.5" # Anything above 0 but less than 1
+MODEL_CHATBOT_MAX_LENGTH = "80"
+
+# For VoiceAssistant:
+# Refer to https://huggingface.co/models?pipeline_tag=automatic-speech-recognition. For long form transcription, please use "distil-whisper/distil-large-v3"
+HUGGINGFACE_STT_MODEL_NAME = "openai/whisper-small"
+
+# Refer to models page https://huggingface.co/models?pipeline_tag=text-to-speech
+HUGGINGFACE_TTS_MODEL_NAME  = "microsoft/speecht5_tts"
 
 # Gradio Config for Server and Port.
-GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> # Eg "127.0.0.1"
+GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> #E.g "127.0.0.1"
 GRADIO_SERVER_PORT = <Your preferred port> #E.g "7860"
 
 # FLASK CONFIG. SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. SERVER_PORT DEFAULTS to 5000 if empty.
-FLASK_RUN_HIST = <Host Name/IP> # Eg "127.0.0.1"
+FLASK_RUN_HIST = <Host Name/IP> #E.g "127.0.0.1"
 FLASK_RUN_PORT = <Your preferred port> #E.g "7860"
 ```
 
@@ -123,9 +127,13 @@ curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are 
 ## 3. Voice Assistant
 
 
-### 3A. Simple transcription service with OPENAI model experimentation setup via Gradio Frontend
+### 3A. Simple transcription service with OpenAI model experimentation setup via Gradio Frontend
 
-You may can either upload your own mp3 file or use a sample mp3 file provided that is obtained from **Archived LiveATC Recordings** link [here](https://www.liveatc.net/recordings.php)
+You may can either upload your own mp3 file or use a sample mp3 file provided which are sourced from
+
+1) **Archived LiveATC Recordings** [link](https://www.liveatc.net/recordings.php) - Expect poor performance due to background noise 
+
+2) **Ted Talks Daily Trailer** [link](https://audiocollective.ted.com/#shows-1) - Expect good performance due to clear audio, without background noise.
 
 Run the following command in the repository
 
@@ -134,8 +142,13 @@ cd VoiceAssistant/experimentations
 python gradio_interface.py
 ```
 
-Access the Gradio Interface via the host IP/Port specified as seen below follow:
+Access the Gradio Interface via the host IP/Port specified as seen below:
 ![SampleTranscriptionService](images/SampleGradioTranscriptionUI.png)
+
+Sample audio transcription from file:
+![SampleAudioTranscription](images/SampleAudioFileTranscription.png)
+
+Disclaimer: Do expect transcription in accuracies as results are largely dependent on the quality and length of audio file.  
 
 ### 3.1 Place RootCA cert in the certs folder
 
@@ -192,3 +205,5 @@ Chatbot module webpage template: [IBM's LLM Application Chatbot Github Repositor
 Voice assistant webpage template: [Arora-R](https://github.com/arora-r/chatapp-with-voice-and-openai-outline)
 
 RootCert Export: [RootCert-Export steps for Windows](https://help.zscaler.com/deception/exporting-root-ca-certificate-active-directory-certificate-service)
+
+OpenAI Speech to text: [Speech-to-text](File uploads are currently limited to 25 MB and the following input file types are supported: mp3, mp4, mpeg, mpga, m4a, wav, and webm)
