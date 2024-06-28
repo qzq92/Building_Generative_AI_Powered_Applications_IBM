@@ -23,7 +23,7 @@ def speech_to_text(audio_binary: list) -> str:
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-    stt_model = os.environ.get("STT_MODEL_NAME")
+    stt_model = os.environ.get("HUGGINGFACE_STT_MODEL_NAME", default="openai/whisper-small")
 
     if not stt_model or stt_model == "":
         stt_model = "openai/whisper-small"
@@ -45,7 +45,9 @@ def speech_to_text(audio_binary: list) -> str:
             language="en",
             task="transcribe",
             do_sample=True,
-            temperature=float(os.environ.get("MODEL_STT_TEMPERATURE"))
+            temperature=float(
+                os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", 0.0)
+            )
         )
         transcription = processor.batch_decode(
             predicted_ids,
@@ -74,23 +76,26 @@ def speech_to_text(audio_binary: list) -> str:
         tokenizer=processor.tokenizer,
         feature_extractor=processor.feature_extractor,
         torch_dtype=torch_dtype,
-        max_new_tokens=int(os.environ.get("MODEL_STT_MAX_TOKEN")),
+        max_new_tokens=int(
+            os.environ.get("HUGGINGFACE_STT_MODEL_MAX_TOKEN", default= "128")
+        ),
         device=device,
         do_sample=True,
-        temperature=float(os.environ.get("MODEL_STT_TEMPERATURE"))
+        temperature=float(
+            os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", "0.0")
+        )
     )
 
     result = pipe(audio_binary)
     return result["text"]
 
-def text_to_speech(input_text: str, api_call: bool = True) -> Any:
+def text_to_speech(input_text: str) -> Any:
     """Function which calls TTS model as a service through inference endpoint API to perform text to speech generation.
 
     Args:
         input_text (str): Input text to be synthesized.
-        api_call (bool): Boolean state to control whether to do inference via API call directly.
     """
-    if api_call:
+    if os.environ.get("TTS_API_CALL_ENABLED") == "1":
         # Set the headers for our HTTP request
         headers = {
             "Authorization": f"Bearer {os.environ.get("HUGGINGFACEHUB_API_TOKEN")}"
@@ -153,7 +158,7 @@ def openai_process_message(user_message: str) -> str:
             {"role": "system", "content": prompt},
             {"role": "user", "content": user_message}
         ],
-        max_tokens = os.environ.get("OPENAI_MAX_TOKEN")
+        max_tokens = int(os.environ.get("OPENAI_MAX_TOKEN", "4000"))
     )
     print("openai response:", openai_response)
     # Parse the response to get the response message for our prompt

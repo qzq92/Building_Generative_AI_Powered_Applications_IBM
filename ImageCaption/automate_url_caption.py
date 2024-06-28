@@ -9,7 +9,6 @@ import requests
 import time
 import os
 
-
 def parse_page_for_image_links(url:str) -> list:
 
     filtered_img_elements = []
@@ -19,7 +18,6 @@ def parse_page_for_image_links(url:str) -> list:
         response.raise_for_status()
     except Exception as e:
         print('Request failed due to error:', e)
-
 
     # Parse the page with BeautifulSoup
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -58,7 +56,7 @@ def generate_caption_for_urls(img_url: list) -> str:
         str: String formatted k:v pair, with k representing image url, and v representing the caption generated.
     """
     # Load the pretrained processor and model
-    processor, model = load_blip_processor_and_model(blip_model_name=os.environ.get("BLIP_MODEL_NAME"))
+    processor, model = load_blip_processor_and_model(blip_model_name=os.environ.get("BLIP_MODEL_NAME", default="Salesforce/blip-image-captioning-large"))
     try:
         # Download the image
         response = requests.get(img_url)
@@ -67,8 +65,9 @@ def generate_caption_for_urls(img_url: list) -> str:
 
         img_res = raw_image.size[0] * raw_image.size[1]
         # Skip very small resolution
-        if img_res < int(os.environ.get("MIN_RES_PIXELS")):
-            caption = "Image resolution too small to be processed by config.\n"
+        if img_res < int(os.environ.get("MIN_RES_PIXELS", default="400")):
+            gen_caption = "Image resolution too small to be processed by config.\n"
+        
         else:
             raw_image = raw_image.convert('RGB')
 
@@ -80,9 +79,9 @@ def generate_caption_for_urls(img_url: list) -> str:
                 max_new_tokens=int(os.environ.get("MODEL_CAPTION_MAX_TOKEN"))
             )
             # Decode the generated tokens to text
-            caption = processor.decode(out[0], skip_special_tokens=True)
+            gen_caption = processor.decode(out[0], skip_special_tokens=True)
 
-        output_str = f"{img_url}: {caption}.\n"
+        output_str = f"{img_url}: {gen_caption}.\n"
         return output_str
     
     # Catch all general exception with common output string construct
@@ -95,19 +94,21 @@ if __name__ == "__main__":
     # Load sys environment
     load_dotenv()
     # URL of the page to scrape
-    url = os.environ.get("IMAGES_SOURCE_URL")
-    filtered_img_url_list = parse_page_for_image_links(url = url)
+    url = os.environ.get(
+        "IMAGES_SOURCE_URL",
+        default="https://en.wikipedia.org/wiki/IBM"
+    )
+    filtered_img_url_list = parse_page_for_image_links(url=url)
     print(f"Number of images to be captioned: {len(filtered_img_url_list)}")
 
     # Set optimal max threads (reserved 2 threads for cpu to cater to other uses)
     MAX_THREADS = min(os.cpu_count() - 2, len(filtered_img_url_list))
     
     # Generate captions for each image url and save it into a text file in a defined filepath.
-    parent_dir = os.environ.get("PYTHONPATH")
-    if not parent_dir:
-        parent_dir = os.getcwd()
+    parent_dir = os.environ.get("PYTHONPATH", default=os.getcwd())
 
     caption_filepath = os.path.join(parent_dir,"generated_captions.txt")
+    
     with open(caption_filepath, "w") as caption_file:
         print(f"Using multiprocessing with {MAX_THREADS} threads to generate captions")
         time_start = time.time()

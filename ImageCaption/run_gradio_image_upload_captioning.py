@@ -8,7 +8,7 @@ if __name__ == "__main__":
     load_dotenv()
     
     processor, model = load_blip_processor_and_model(
-    blip_model_name = os.environ.get("BLIP_MODEL_NAME")
+    blip_model_name = os.environ.get("BLIP_MODEL_NAME", default="Salesforce/blip-image-captioning-large")
 )
 
     # Define gradio interface

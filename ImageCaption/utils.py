@@ -34,14 +34,14 @@ def generate_caption(
         str: Returns generated caption by BLIP model. Returns an error string when exception is encountered.
     """
     try:
-        blip_model_name = os.environ.get("BLIP_MODEL_NAME")
+        blip_model_name = os.environ.get("BLIP_MODEL_NAME", default= "Salesforce/blip-image-captioning-large")
         processor, model = load_blip_processor_and_model(blip_model_name)
         if not text_prompt:
             inputs = processor(images=image, return_tensors="pt")
         else:
             inputs = processor(images=image, text=str(text_prompt), return_tensors="pt")
 
-        outputs = model.generate(**inputs, max_new_tokens=int(os.environ.get("MODEL_CAPTION_MAX_TOKEN")))
+        outputs = model.generate(**inputs, max_new_tokens=int(os.environ.get("MODEL_CAPTION_MAX_TOKEN", default="300")))
 
         raw_caption = str(processor.decode(outputs[0], skip_special_tokens=True))
         raw_caption = raw_caption.capitalize() + "."

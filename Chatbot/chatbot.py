@@ -9,10 +9,15 @@ Script which enables chatbot-human interaction via terminal/command prompt appli
 if __name__ == "__main__":
     load_dotenv()
 
-    model_name = os.environ.get("CHATBOT_MODEL_NAME")
+    model_name = os.environ.get(
+        "CHATBOT_MODEL_NAME",
+         default="facebook/blenderbot-400M-distill"
+    )
     # Load model (download on first run and reference local installation for consequent runs)
     hface_auth_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
 
+    if not hface_auth_token or hface_auth_token == "":
+        raise ValueError("HuggingFace Authentication Token not found.")
     # Load model,tokenizer and convo history
     model, tokenizer, conversation_history = load_model_tokenizer_and_clean_convo_hist(
         model_name=model_name, token=hface_auth_token

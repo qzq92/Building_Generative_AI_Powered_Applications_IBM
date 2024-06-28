@@ -30,12 +30,12 @@ def speech_to_text_route() -> str:
     # Call speech_to_text function to transcribe the speech
     text = speech_to_text(audio_binary)
     # Return the response back to the user in JSON format
-    # response = app.response_class(
-    #     response=json.dumps({'text': text}),
-    #     status=200,
-    #     mimetype='application/json'
-    # )
-    # print(response)
+    response = app.response_class(
+        response=json.dumps({'text': text}),
+        status=200,
+        mimetype='application/json'
+    )
+    print(response)
     response = "Testing in progress"
     return response
 
@@ -53,9 +53,10 @@ def process_message_route():
     # Call our text_to_speech function to convert OpenAI Api's reponse to speech
     # The openai_response_speech is a type of audio data, we can't directly send this inside a json as it can only store textual data
     openai_response_speech = text_to_speech(openai_response_text)
-    
-    # convert openai_response_speech to base64 string so it can be sent back in the JSON response
-    openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
+
+    print(openai_response_speech)    
+    # # convert openai_response_speech to base64 string so it can be sent back in the JSON response
+    # openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
     # Send a JSON response back to the user containing their message's response both in text and speech formats
     response = app.response_class(
         response=json.dumps({"openaiResponseText": openai_response_text, "openaiResponseSpeech": openai_response_speech}),

@@ -48,10 +48,10 @@ def get_response_for_input(
     # Generate the response from the model
     outputs = model.generate(
         **inputs,
-        temperature = float(os.environ.get("TEMPERATURE")),
+        temperature = float(os.environ.get("CHATBOT_MODEL_TEMPERATURE", default = "0.5")),
         do_sample=True,
         early_stopping = True,
-        max_length = int(os.environ.get("MODEL_CHATBOT_MAX_LENGTH"))
+        max_length = int(os.environ.get("CHATBOT_MODEL_MAX_LENGTH", "80"))
     )  # max_length will cause model to crash at some point as history grows
 
     # Decode the response

@@ -11,12 +11,15 @@ def open_image_in_rgb(img_filepath: str) -> Image:
     except PIL.UnidentifiedImageError:
         print("Encountered UnidentifiedImageError in opening the image for processing.")
         return None
-
+    except FileNotFoundError:
+        print("File Not Found.")
+        return None
+    
 # Test run program module purpose
 if __name__ == "__main__":
     load_dotenv()
 
-    img_filepath_eg = os.path.join(os.getcwd(), "images", os.environ.get("VISUALQA_IMAGE_FILENAME"))
+    img_filepath_eg = os.path.join(os.getcwd(), "images", os.environ.get("VISUALQA_IMAGE_FILENAME", default="demo_image.jpg"))
     # Open image for processing
     rgb_image = open_image_in_rgb(img_filepath_eg)
 
