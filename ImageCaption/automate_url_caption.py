@@ -1,12 +1,14 @@
+from concurrent.futures import ProcessPoolExecutor
+from io import BytesIO
+from dotenv import load_dotenv
+from PIL import Image
+from bs4 import BeautifulSoup
+from utils import load_blip_processor_and_model
+
 import requests
 import time
 import os
-from dotenv import load_dotenv
-from PIL import Image
-from io import BytesIO
-from bs4 import BeautifulSoup
-from utils import load_blip_processor_and_model
-from concurrent.futures import ProcessPoolExecutor
+
 
 def parse_page_for_image_links(url:str) -> list:
 
@@ -50,7 +52,7 @@ def generate_caption_for_urls(img_url: list) -> str:
     """Function which generates caption for given url using loaded BLIP processor and model.
 
     Args:
-        img_url (list): _description_
+        img_url (list): Url to images.
 
     Returns:
         str: String formatted k:v pair, with k representing image url, and v representing the caption generated.
@@ -73,7 +75,10 @@ def generate_caption_for_urls(img_url: list) -> str:
             # Process the image
             inputs = processor(raw_image, return_tensors="pt")
             # Generate a caption for the image
-            out = model.generate(**inputs, max_new_tokens=50)
+            out = model.generate(
+                **inputs,
+                max_new_tokens=int(os.environ.get("MODEL_CAPTION_MAX_TOKEN"))
+            )
             # Decode the generated tokens to text
             caption = processor.decode(out[0], skip_special_tokens=True)
 

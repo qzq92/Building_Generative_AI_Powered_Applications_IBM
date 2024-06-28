@@ -1,6 +1,6 @@
 import gradio as gr
 import os
-from imagecaptioning import load_blip_processor_and_model, generate_caption
+from utils import load_blip_processor_and_model, generate_caption
 from dotenv import load_dotenv
 
 if __name__ == "__main__":

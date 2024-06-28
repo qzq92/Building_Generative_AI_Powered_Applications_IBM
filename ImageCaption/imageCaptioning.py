@@ -1,7 +1,7 @@
 import os
 import PIL
 from PIL import Image
-from utils import load_blip_processor_and_model
+from utils import generate_caption
 from dotenv import load_dotenv
 
 def open_image_in_rgb(img_filepath: str) -> Image:
@@ -11,36 +11,6 @@ def open_image_in_rgb(img_filepath: str) -> Image:
     except PIL.UnidentifiedImageError:
         print("Encountered UnidentifiedImageError in opening the image for processing.")
         return None
-
-def generate_caption(
-    image: Image,
-    text_prompt: str,
-) -> str:
-    """Function which generates captions (guided by additional text prompt if exist) for an given image.
-
-    Args:
-        image (Image): Opened Image object
-        text_prompt (str): Text string to help guide BLIP model to generate captions.
-
-    Returns:
-        str: Returns generated caption by BLIP model. Returns an error string when exception is encountered.
-    """
-    try:
-        blip_model_name = os.environ.get("BLIP_MODEL_NAME")
-        processor, model = load_blip_processor_and_model(blip_model_name)
-        if not text_prompt:
-            inputs = processor(images=image, return_tensors="pt")
-        else:
-            inputs = processor(images=image, text=str(text_prompt), return_tensors="pt")
-
-        outputs = model.generate(**inputs, max_new_tokens=int(os.environ.get("MODEL_MAX_TOKEN")))
-
-        raw_caption = str(processor.decode(outputs[0], skip_special_tokens=True))
-        raw_caption = raw_caption.capitalize() + "."
-        return raw_caption
-    
-    except Exception as err:
-        return f"An error occurred in generating caption {err}."
 
 # Test run program module purpose
 if __name__ == "__main__":
