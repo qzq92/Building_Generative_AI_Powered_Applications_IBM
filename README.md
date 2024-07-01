@@ -48,6 +48,7 @@ HUGGINGFACE_STT_MODEL_TEMPERATURE = "0.0"
 
 ## TTS Config here.
 HUGGINGFACE_TTS_MODEL_NAME  = "microsoft/speecht5_tts"
+HUGGINGFACE_TTS_MODEL_TEMPERATURE = "0.0"
 TTS_API_CALL_ENABLED = "0" # will route tts model use to above. Other value will mean offline inference
 
 # Gradio Config for Server and Port.
