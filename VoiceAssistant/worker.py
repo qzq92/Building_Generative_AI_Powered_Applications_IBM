@@ -1,7 +1,7 @@
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
-from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
+from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor, SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
 from datetime import datetime
 import requests
 import os
@@ -9,6 +9,10 @@ import soundfile as sf
 import torch
 
 load_dotenv()
+
+
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 
 def speech_to_text(audio_binary: list) -> str:
     """The function simply takes audio_binary as the only parameter and then sends it in the body of the HTTP request.
@@ -19,14 +23,19 @@ def speech_to_text(audio_binary: list) -> str:
     Returns:
         str: Transcribed speech in text.
     """
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
-    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-
     stt_model = os.environ.get("HUGGINGFACE_STT_MODEL_NAME", default="openai/whisper-small")
 
     if not stt_model or stt_model == "":
         stt_model = "openai/whisper-small"
-    
+
+    stt_temperature = float(
+    os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", 0.0)
+)
+    # Correction mechanism
+    if stt_temperature < 0:
+        print("Encountered negative temperature value, overriding to 0 instead.")
+        stt_temperature = 0.0
+
     if stt_model.startswith("openai/whisper"):
         model = WhisperForConditionalGeneration.from_pretrained(
             pretrained_model_name_or_path=stt_model
@@ -38,15 +47,14 @@ def speech_to_text(audio_binary: list) -> str:
             audio_binary, sampling_rate=44100, return_tensors="pt"
         ).input_features
         
+
         # Generate token ids and decode them (returns a list). Configuration would be impactful for long form transcription
         predicted_ids = model.generate(
             input_features=input_features,
             language="en",
             task="transcribe",
             do_sample=True,
-            temperature=float(
-                os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", 0.0)
-            )
+            temperature=stt_temperature
         )
         transcription = processor.batch_decode(
             predicted_ids,
@@ -59,32 +67,31 @@ def speech_to_text(audio_binary: list) -> str:
     # Assume other models that is not from OpenAI
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
         pretrained_model_name_or_path=stt_model,
-        torch_dtype=torch_dtype,
         low_cpu_mem_usage=True,
         use_safetensors=True
     )
-    model.to(device)
 
     processor = AutoProcessor.from_pretrained(
         pretrained_model_name_or_path=stt_model
     )
 
+    # Create huggingface pipeline that is loaded to suitable DEVICE.
     pipe = pipeline(
         task="automatic-speech-recognition",
         model=model,
         tokenizer=processor.tokenizer,
         feature_extractor=processor.feature_extractor,
-        torch_dtype=torch_dtype,
+        torch_dtype=TORCH_DTYPE,
         max_new_tokens=int(
             os.environ.get("HUGGINGFACE_STT_MODEL_MAX_TOKEN", default= "128")
         ),
-        device=device,
+        device=DEVICE,
         do_sample=True,
+        framework="pt",
         temperature=float(
             os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", "0.0")
         )
     )
-
     result = pipe(audio_binary)
     return result["text"]
 
@@ -97,6 +104,14 @@ def text_to_speech(input_text: str) -> json:
     Returns:
         json: Response in json object.
     """
+
+
+    # Load pretrained processor,model,vocoder and embeddings
+    processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
+    model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts")
+    vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan")
+    speaker_embeddings = torch.load(f"speaker_embeddings/spk_embed_default.pt")
+
     if os.environ.get("TTS_API_CALL_ENABLED") == "1":
         print("Using API calls for Text-to-speech synthesization\n")
         # Set the headers for our HTTP request
@@ -127,25 +142,31 @@ def text_to_speech(input_text: str) -> json:
         return response.json()
 
     print("Running inference offline....")
-    # If not api call
-    synthesizer = pipeline(
-        task="text-to-speech",
-        model=os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
+    # Generate processor
+    inputs = processor(text=input_text, return_tensors="pt")
+    # Include pad_token_id to suppress warning: "Setting `pad_token_id` to `eos_token_id`:{eos_token_id} for open-end generation." Returns audio and sampling rate
+    speech = model.generate_speech(
+        inputs["input_ids"],
+        speaker_embeddings,
+        vocoder=vocoder,
+        threshold=0.5
     )
 
-    speech = synthesizer(inputs=input_text)
 
+    # Returns dict of audio and sampling rate
+    print(speech)
     tts_audio_files_dir = "tts_audio_files"
-    os.makedirs(tts_audio_files_dir, exist_ok=True)
 
     # Write audio file after synthesizing
+    os.makedirs(tts_audio_files_dir, exist_ok=True)
+    print("Writing to audio file upon synthesizing audios")
     datetime_now_fmt = datetime.now().strftime('%Y%m%d_%H%M%S')
-    tts_audio_filename =  f"speech_{datetime_now_fmt}"
-    sf.write(tts_audio_filename, speech["audio"], samplerate=speech["sampling_rate"])
+    tts_audio_filename =  f"speech_{datetime_now_fmt}.mp3"
+    try:
+        sf.write(tts_audio_filename, speech.numpy(), samplerate=24000)
+    except TypeError:
+        print(f"Unable to write audio file as {tts_audio_filename} due to invalid format")
 
-    response = synthesizer(inputs=input_text)
-    print(response)
-    print(type(response))
     return response
 
 def openai_process_message(user_message: str) -> str:
@@ -168,9 +189,10 @@ def openai_process_message(user_message: str) -> str:
             {"role": "system", "content": prompt},
             {"role": "user", "content": user_message}
         ],
-        max_tokens = int(os.environ.get("OPENAI_MAX_TOKEN", "4000"))
+        max_tokens = int(os.environ.get("OPENAI_MAX_TOKEN", "4000")),
     )
 
     # Parse the response to get the response message for our prompt
+    print("Generating speech with OpenAI...")
     response_text = openai_response.choices[0].message.content
     return response_text
