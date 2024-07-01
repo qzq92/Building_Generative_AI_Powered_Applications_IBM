@@ -35,19 +35,19 @@ MIN_RES_PIXELS = "400" ## As long it is positive
 MODEL_CAPTION_MAX_TOKEN = "300" ## As long it is positive
 
 # For Chatbot. Please select a relevant HuggingFace model that can fit and run on your computer.
-CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
-CHATBOT_MODEL_TEMPERATURE = "0.8" # Anything above 0 but less than 1
-CHATBOT_MODEL_MAX_LENGTH = "80"
+CHATBOT_MODEL_NAME = <Your LLM Chat model> #E.g "facebook/blenderbot-400M-distill"
+CHATBOT_MODEL_TEMPERATURE = "0.8" # Anything above 0 but less than 1. A float value
+CHATBOT_MODEL_MAX_LENGTH = "80" # Chatbot max length generation. Must be positive integer.
 
 # For VoiceAssistant. Refer to STT models, https://huggingface.co/models?pipeline_tag=automatic-speech-recognition and TTS models page at https://huggingface.co/models?pipeline_tag=text-to-speech
 
 ## For long form transcription, please use "distil-whisper/distil-large-v3". STT Config here
-HUGGINGFACE_STT_MODEL_NAME = "openai/whisper-small"
-HUGGINGFACE_STT_MODEL_MAX_TOKEN = "128"
+HUGGINGFACE_STT_MODEL_NAME = <Your STT model> #E.g "openai/whisper-small"
+HUGGINGFACE_STT_MODEL_MAX_TOKEN = "128" # STT max token generation. Must be positive integer.
 HUGGINGFACE_STT_MODEL_TEMPERATURE = "0.0"
 
 ## TTS Config here.
-HUGGINGFACE_TTS_MODEL_NAME  = "microsoft/speecht5_tts"
+HUGGINGFACE_TTS_MODEL_NAME = "microsoft/speecht5_tts"
 HUGGINGFACE_TTS_MODEL_TEMPERATURE = "0.0"
 TTS_API_CALL_ENABLED = "0" # will route tts model use to above. Other value will mean offline inference
 
@@ -127,16 +127,15 @@ You should see a sample chatbot interface below:
 A demonstration example of how conversation would be as follows:
 ![SampleChatbotConversation](images/SampleChatBotInteraction.png)
 
-To terminate program, press 'Ctrl' + 'C'.
+To terminate program, press 'Ctrl' + 'C' in your terminal.
 
 **Testing of chatbot response with curl**
-Ensure that you have executed above command to get flask running. Then execute an example command below
+Ensure that you have executed above command to get flask running. Then execute an example command below:
 
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are you today?"}' <Flask Server Host>:<Port>/chatbot
 ```
 ## 3. Voice Assistant
-
 
 ### 3A. Simple transcription service with OpenAI model experimentation setup via Gradio Frontend
 
@@ -168,16 +167,20 @@ Disclaimer: Do expect transcription in accuracies as results are largely depende
 ```
 TTS_API_CALL_ENABLED = "0"
 **
-and 
-Run the following command to start the Flask service
+
+Run the following command to start the Flask service front end.
 
 ```
 python run VoiceAssistant/server.py
 ```
 
-Access the Flask Interface via the host IP/Port specified and you should see a frontend like below:
+Access the Flask Interface via the host IP/Port specified and you should see a frontend as follows:
 
 ![SampleVoiceAssistantService](images/SampleVoiceAssistantUI.png)
+
+
+A working chat version is as shown below
+![SampleOngoingVoiceAssistantService](images/SampleOngoingVoiceAssistantUI.png)
 
 ## Programming languages/tools involved
 - Python
@@ -188,7 +191,7 @@ Access the Flask Interface via the host IP/Port specified and you should see a f
     - Textbox
     - Image
 - HuggingFace
-    - Transformer models involving BlipProcessor, BlipForConditionalGeneration
+    - Transformer models involving HuggingFace pipeline, BlipProcessor, BlipForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor, WhisperProcessor,WhisperForConditionalGeneration
 - Concurrence library
     - Multiprocessing with 10 threads for image captioning
         - 14 images took 254 seconds

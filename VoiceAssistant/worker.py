@@ -2,6 +2,7 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor, SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
+from datasets import load_dataset
 from datetime import datetime
 import requests
 import os
@@ -11,8 +12,23 @@ import torch
 load_dotenv()
 
 
+
+
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
+
+def get_cmu_arctic_embedding() -> torch.tensor:
+    """Function which returns a speaker embeddings from open-source dataset
+
+    Returns:
+        torch.tensor: Torch tensor representing speaker embedding.
+    """
+    embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
+
+    speaker_embeddings = embeddings_dataset[7306]["xvector"]
+    speaker_embeddings = torch.tensor(speaker_embeddings).unsqueeze(0)
+    
+    return speaker_embeddings
 
 def speech_to_text(audio_binary: list) -> str:
     """The function simply takes audio_binary as the only parameter and then sends it in the body of the HTTP request.
@@ -110,7 +126,7 @@ def text_to_speech(input_text: str) -> json:
     processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
     model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts")
     vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan")
-    speaker_embeddings = torch.load(f"speaker_embeddings/spk_embed_default.pt")
+    speaker_embeddings = get_cmu_arctic_embedding()
 
     if os.environ.get("TTS_API_CALL_ENABLED") == "1":
         print("Using API calls for Text-to-speech synthesization\n")
@@ -147,11 +163,10 @@ def text_to_speech(input_text: str) -> json:
     # Include pad_token_id to suppress warning: "Setting `pad_token_id` to `eos_token_id`:{eos_token_id} for open-end generation." Returns audio and sampling rate
     speech = model.generate_speech(
         inputs["input_ids"],
-        speaker_embeddings,
+        speaker_embeddings=speaker_embeddings,
         vocoder=vocoder,
         threshold=0.5
     )
-
 
     # Returns dict of audio and sampling rate
     print(speech)
@@ -159,7 +174,7 @@ def text_to_speech(input_text: str) -> json:
 
     # Write audio file after synthesizing
     os.makedirs(tts_audio_files_dir, exist_ok=True)
-    print("Writing to audio file upon synthesizing audios")
+    print("Writing to audio file after generating speech...")
     datetime_now_fmt = datetime.now().strftime('%Y%m%d_%H%M%S')
     tts_audio_filename =  f"speech_{datetime_now_fmt}.mp3"
     try:
@@ -167,7 +182,7 @@ def text_to_speech(input_text: str) -> json:
     except TypeError:
         print(f"Unable to write audio file as {tts_audio_filename} due to invalid format")
 
-    return response
+    return speech.numpy()
 
 def openai_process_message(user_message: str) -> str:
     """Function which processes user message input with OpenAI models and generates completion as response.

@@ -57,8 +57,9 @@ def process_message_route():
 
     print(openai_response_speech)
     # # convert openai_response_speech to base64 string so it can be sent back in the JSON response
-    print("Encdoing with base64 and decode to utf8")
+    print("Encoding with base64 and decode to utf8")
     openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
+
     # Send a JSON response back to the user containing their message's response both in text and speech formats
     if "error" in dict(openai_response_speech):
         print("Error in generating synthesizing text to speech. Response will not have any speech")
@@ -70,6 +71,7 @@ def process_message_route():
             status=200,
             mimetype='application/json'
         )
+    # Include text and speech case if no error.
     else:
         response = app.response_class(
             response=json.dumps({
