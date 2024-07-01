@@ -16,34 +16,37 @@ Repository containing codebase covering various GenAI module applications based 
 
 ## Environment file to create and edit
 
-Include the following parameters. Please enter your API Token keys where necessary.
+The *.env* file containing environment variables will be referenced by all modules in this repo. Here are the default settings for quickstart.
+
+Please enter your API Token keys, change model names are other configurations where necessary for other experimentation needs
 
 ```
 OPENAI_API_KEY = <YOUR API TOKEN>
 OPENAI_MAX_TOKEN = "4000"
 OPENAI_MODEL_NAME = "gpt-3.5-turbo"
 HUGGINGFACEHUB_API_TOKEN = <YOUR API TOKEN>
-PYTHONPATH =
+PYTHONPATH = <REPOSITORY PATH>
 
 # For Image Captioning
 BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-large"
 VISUALQA_IMAGE_FILENAME = "demo_image.jpg" ## For imagecaptioning.py use
 IMAGES_SOURCE_URL = "https://en.wikipedia.org/wiki/IBM" ## For automate_url_caption.py use
-MIN_RES_PIXELS = "400"
-MODEL_CAPTION_MAX_TOKEN = "300"
+MIN_RES_PIXELS = "400" ## As long it is positive
+MODEL_CAPTION_MAX_TOKEN = "300" ## As long it is positive
 
-# For Chatbot. Please select a model that can fit and run on your computer.
+# For Chatbot. Please select a relevant HuggingFace model that can fit and run on your computer.
 CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
 CHATBOT_MODEL_TEMPERATURE = "0.8" # Anything above 0 but less than 1
 CHATBOT_MODEL_MAX_LENGTH = "80"
 
-# For VoiceAssistant:
-# Refer to https://huggingface.co/models?pipeline_tag=automatic-speech-recognition. For long form transcription, please use "distil-whisper/distil-large-v3"
+# For VoiceAssistant. Refer to STT models, https://huggingface.co/models?pipeline_tag=automatic-speech-recognition and TTS models page at https://huggingface.co/models?pipeline_tag=text-to-speech
+
+## For long form transcription, please use "distil-whisper/distil-large-v3". STT Config here
 HUGGINGFACE_STT_MODEL_NAME = "openai/whisper-small"
 HUGGINGFACE_STT_MODEL_MAX_TOKEN = "128"
 HUGGINGFACE_STT_MODEL_TEMPERATURE = "0.0"
 
-# Refer to models page https://huggingface.co/models?pipeline_tag=text-to-speech
+## TTS Config here.
 HUGGINGFACE_TTS_MODEL_NAME  = "microsoft/speecht5_tts"
 TTS_API_CALL_ENABLED = "0" # will route tts model use to above. Other value will mean offline inference
 
@@ -156,10 +159,15 @@ Access the Gradio Interface via the host IP/Port specified and you should see a 
 Sample audio transcription from file:
 ![SampleAudioTranscription](images/SampleAudioFileTranscription.png)
 
-Disclaimer: Do expect transcription in accuracies as results are largely dependent on the quality and length of audio file.  
+Disclaimer: Do expect transcription in accuracies as results are largely dependent on the quality and length of audio file provided.  
 
 ### 3B. Simple VoiceAssistant application
 
+**Disclaimer: HuggingFaceHub Model inference endpoint may not be available at times. As such, you may want to experiment with text to speech models offline by setting the environment variables as follows:
+```
+TTS_API_CALL_ENABLED = "0"
+**
+and 
 Run the following command to start the Flask service
 
 ```
