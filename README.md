@@ -167,6 +167,7 @@ Disclaimer: Do expect transcription in accuracies as results are largely depende
 ```
 TTS_API_CALL_ENABLED = "0"
 **
+```
 
 Run the following command to start the Flask service front end.
 
