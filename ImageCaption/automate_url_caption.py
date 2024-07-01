@@ -59,13 +59,21 @@ def generate_caption_for_urls(img_url: list) -> str:
     processor, model = load_blip_processor_and_model(blip_model_name=os.environ.get("BLIP_MODEL_NAME", default="Salesforce/blip-image-captioning-large"))
     try:
         # Download the image
-        response = requests.get(img_url)
+        response = requests.get(img_url, timeout = 300)
         # Convert the image data to a PIL Image
         raw_image = Image.open(BytesIO(response.content))
 
         img_res = raw_image.size[0] * raw_image.size[1]
-        # Skip very small resolution
-        if img_res < int(os.environ.get("MIN_RES_PIXELS", default="400")):
+
+        # Set default if env is missing
+        min_res_required = int(os.environ.get("MIN_RES_PIXELS", default="400"))
+
+        # Rectify invalid resolution if encountered
+        if min_res_required <=0:
+            print("Negative resolution setting encountered.Rectifying to 400")
+            min_res_required = 400
+
+        if img_res < min_res_required:
             gen_caption = "Image resolution too small to be processed by config.\n"
         
         else:
@@ -91,6 +99,7 @@ def generate_caption_for_urls(img_url: list) -> str:
         return output_str
 
 if __name__ == "__main__":
+
     # Load sys environment
     load_dotenv()
     # URL of the page to scrape
