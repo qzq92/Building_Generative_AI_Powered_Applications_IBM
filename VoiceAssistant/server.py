@@ -1,9 +1,10 @@
 import json
-import base64
 from flask import Flask, render_template, request
 from worker import speech_to_text, text_to_speech, openai_process_message
 from flask_cors import CORS
 import os
+import numpy as np
+import base64
 
 # Define Flask app
 app = Flask(__name__)
@@ -27,7 +28,8 @@ def speech_to_text_route() -> str:
     audio_binary = request.data # Get the user's speech from their request
     print(audio_binary)
     print(type(audio_binary))
-    # Call speech_to_text function to transcribe the speech
+    
+    # Call speech_to_text function to transcribe the speech which returns a text string
     text = speech_to_text(audio_binary)
     # Return the response back to the user in JSON format
     response = app.response_class(
@@ -36,7 +38,6 @@ def speech_to_text_route() -> str:
         mimetype='application/json'
     )
     print(response)
-    response = "Testing in progress"
     return response
 
 # Logic route to process message
@@ -50,42 +51,45 @@ def process_message_route():
     # Clean the response to remove any emptylines
     openai_response_text = os.linesep.join([s for s in openai_response_text.splitlines() if s])
 
-    print(f"Generated ChatModel response: {openai_response_text}. Synthesizing to speech...")
     # Call our text_to_speech function to convert OpenAI Api's reponse to speech
     # The openai_response_speech is a type of audio data, we can't directly send this inside a json as it can only store textual data
     openai_response_speech = text_to_speech(openai_response_text)
 
+    print("Before encoding with base 64 and decode to utf8")
     print(openai_response_speech)
-    # # convert openai_response_speech to base64 string so it can be sent back in the JSON response
-    print("Encoding with base64 and decode to utf8")
-    openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
+    print(type(openai_response_speech))
 
-    # Send a JSON response back to the user containing their message's response both in text and speech formats
-    if "error" in dict(openai_response_speech):
-        print("Error in generating synthesizing text to speech. Response will not have any speech")
-    
+    # Lossless commpression with base64 and decode to utf8
+
+    print("Encoding with base64 and decode to utf8")
+
+    if np.any(openai_response_speech):
+        openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
+        # Send a JSON response back to the user containing their message's response both in text and speech formats. JSON key is referenced by script.js
         response = app.response_class(
             response=json.dumps({
-                "openaiResponseText": openai_response_text,
+                "ResponseText": openai_response_text,
+                "ResponseSpeech": openai_response_speech
             }),
             status=200,
             mimetype='application/json'
         )
-    # Include text and speech case if no error.
     else:
+        # Send a JSON response back to the user containing their message's response both in text only with json.dumps that convert python objects
         response = app.response_class(
             response=json.dumps({
-                "openaiResponseText": openai_response_text,
-                "openaiResponseSpeech": openai_response_speech
+                "ResponseText": "Error encountered in chatbot",
             }),
             status=200,
             mimetype='application/json'
         )
+
+    print(response)
     return response
 
 if __name__ == "__main__":
     app.run(
-        debug = True,
+        debug = False,
         host = os.environ.get("FLASK_RUN_HOST"),
         port = int(os.environ.get("FLASK_RUN_PORT")),
         load_dotenv = True

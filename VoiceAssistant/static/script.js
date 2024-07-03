@@ -98,6 +98,7 @@ const toggleRecording = async () => {
   }
 };
 
+// https://stackoverflow.com/questions/17762763/play-wav-sound-file-encoded-in-base64-with-javascript
 const playResponseAudio = (function () {
   const df = document.createDocumentFragment();
   return function Sound(src) {
@@ -106,7 +107,7 @@ const playResponseAudio = (function () {
     snd.addEventListener("ended", function () {
       df.removeChild(snd);
     });
-    snd.play();
+    snd.play().catch(err=>console.log(err));
     return snd;
   };
 })();
@@ -162,11 +163,11 @@ const populateBotResponse = async (userMessage) => {
     `<div class='message-line'><div class='message-box${
       !lightMode ? " dark" : ""
     }'>${
-      response.openaiResponseText
-    }</div><button id='${repeatButtonID}' class='btn volume repeat-button' onclick='playResponseAudio("data:audio/wav;base64," + responses[botRepeatButtonIDToIndexMap[this.id]].openaiResponseSpeech);console.log(this.id)'><i class='fa fa-volume-up'></i></button></div>`
+      response.ResponseText
+    }</div><button id='${repeatButtonID}' class='btn volume repeat-button' onclick='playResponseAudio("data:audio/wav;base64," + responses[botRepeatButtonIDToIndexMap[this.id]].ResponseSpeech);console.log(this.id)'><i class='fa fa-volume-up'></i></button></div>`
   );
 
-  playResponseAudio("data:audio/wav;base64," + response.openaiResponseSpeech);
+  playResponseAudio("data:audio/wav;base64," + response.ResponseSpeech);
 
   scrollToBottom();
 };
