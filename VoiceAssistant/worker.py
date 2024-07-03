@@ -4,8 +4,10 @@ from dotenv import load_dotenv
 from load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
 from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
 from datetime import datetime
+from bark import SAMPLE_RATE
 import requests
 import os
+import numpy as np
 import soundfile as sf
 import torch
 
@@ -16,7 +18,7 @@ DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 
 def speech_to_text(audio_binary: list) -> str:
-    """The function simply takes audio_binary as the only parameter and then sends it in the body of the HTTP request.
+    """The function simply takes audio_binary (a list of values) as the only parameter and then calls the relevant STT model based on configuration for transcribing the audio.
 
     Args:
         audio_binary (str): Array of values sampled from audio.
@@ -24,26 +26,38 @@ def speech_to_text(audio_binary: list) -> str:
     Returns:
         str: Transcribed speech in text.
     """
-    stt_model = os.environ.get("HUGGINGFACE_STT_MODEL_NAME", default="openai/whisper-small")
 
-    if not stt_model or stt_model == "":
-        stt_model = "openai/whisper-small"
+    default_model = "facebook/s2t-small-librispeech-asr"
+
+    stt_model = os.environ.get("HUGGINGFACE_STT_MODEL_NAME", default=default_model)
 
     stt_temperature = float(
     os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", 0.0)
 )
     # Correction mechanism
     if stt_temperature < 0:
-        print("Encountered negative temperature value, overriding to 0 instead.")
+        print("Encountered negative temperature value, overriding to 0.0 instead.")
         stt_temperature = 0.0
 
-    if stt_model.startswith("openai/whisper"):
-        model = WhisperForConditionalGeneration.from_pretrained(
-            pretrained_model_name_or_path=stt_model
-        )
-        processor = WhisperProcessor.from_pretrained(
-            pretrained_model_name_or_path=stt_model
-        )
+    if "openai/whisper" in stt_model.lower():
+        try:    
+            model = WhisperForConditionalGeneration.from_pretrained(
+                pretrained_model_name_or_path=stt_model
+            )
+            processor = WhisperProcessor.from_pretrained(
+                pretrained_model_name_or_path=stt_model
+            )
+        except ValueError:
+            print("Invalid OpenAI model chosen. Default to openai/whisper-tiny.en model ")
+            stt_model = "openai/whisper-tiny.en"
+            model = WhisperForConditionalGeneration.from_pretrained(
+                pretrained_model_name_or_path=stt_model
+            )
+            processor = WhisperProcessor.from_pretrained(
+                pretrained_model_name_or_path=stt_model
+            )
+
+        # Process features of audio
         input_features = processor(
             audio_binary, sampling_rate=44100, return_tensors="pt"
         ).input_features
@@ -89,15 +103,13 @@ def speech_to_text(audio_binary: list) -> str:
         device=DEVICE,
         do_sample=True,
         framework="pt",
-        temperature=float(
-            os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", "0.0")
-        )
+        temperature=stt_temperature
     )
     result = pipe(audio_binary)
     return result["text"]
 
 def text_to_speech(input_text: str) -> json:
-    """Function which calls TTS model as a service through inference endpoint API to perform text to speech generation.
+    """Function which decides to use TTS model inference endpoint API or conduct offline inference based on environment variable 'HUGGINGFACE_TTS_MODEL_NAME' to perform text to speech generation.
 
     Args:
         input_text (str): Input text to be synthesized.
@@ -131,7 +143,7 @@ def text_to_speech(input_text: str) -> json:
         except requests.exceptions.RequestException as err:
             print("Request exception error",err)
 
-        return response.json()
+        return np.array(response.content)
 
     print(f"Running offline inference with {model_id}")
     # Generate processor
@@ -146,7 +158,7 @@ def text_to_speech(input_text: str) -> json:
             vocoder=vocoder,
             threshold=0.5
         )
-    # For BarkModel
+    # For BarkModel, which doesnt need vocoder to generate speech waves
     else:
         inputs = processor(
             text=input_text,
@@ -159,21 +171,28 @@ def text_to_speech(input_text: str) -> json:
             threshold=0.5
         ).cpu().numpy()
 
+    # Add short silence between words
+    silence = np.zeros(int(0.25 * SAMPLE_RATE))
+
+    new_speech = np.asarray(np.append(np.array(speech_val), silence) for speech_val in speech)
     # Returns dict of audio and sampling rate
-    print(speech)
-    tts_audio_files_dir = "tts_audio_files"
+    print(new_speech)
 
     # Write audio file after synthesizing
+    tts_audio_files_dir = "tts_audio_files"
     os.makedirs(tts_audio_files_dir, exist_ok=True)
     print("Writing to audio file after generating speech...")
     datetime_now_fmt = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    # Write to folder
     tts_audio_filename =  f"speech_{datetime_now_fmt}.mp3"
+    audio_filepath = os.path.join(tts_audio_files_dir, tts_audio_filename)
     try:
-        sf.write(tts_audio_filename, speech.numpy(), samplerate=24000)
+        sf.write(audio_filepath, speech, samplerate=44100)
     except TypeError:
         print(f"Unable to write audio file as {tts_audio_filename} due to invalid format")
 
-    return speech.numpy()
+    return speech
 
 def openai_process_message(user_message: str) -> str:
     """Function which processes user message input with OpenAI models and generates completion as response.
