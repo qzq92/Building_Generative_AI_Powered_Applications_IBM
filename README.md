@@ -197,6 +197,12 @@ A working chat version is as shown below
     - Multiprocessing with 10 threads for image captioning
         - 14 images took 254 seconds
 
+
+## Troubleshooting notes
+
+
+1. To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to see activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+
 ## Acknowledgement and Credits
 
 The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications.
