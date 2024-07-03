@@ -1,6 +1,6 @@
 import json
 from flask import Flask, render_template, request
-from worker import speech_to_text, text_to_speech, openai_process_message
+from worker import speech_to_text, text_to_speech, process_message
 from flask_cors import CORS
 import os
 import numpy as np
@@ -47,7 +47,7 @@ def process_message_route():
     print('user_message', user_message)
 
     # Call openai_process_message function to process the user's message and get a response back
-    openai_response_text = openai_process_message(user_message)
+    openai_response_text = process_message(user_message)
     # Clean the response to remove any emptylines
     openai_response_text = os.linesep.join([s for s in openai_response_text.splitlines() if s])
 
@@ -89,7 +89,7 @@ def process_message_route():
 
 if __name__ == "__main__":
     app.run(
-        debug = False,
+        debug = True,
         host = os.environ.get("FLASK_RUN_HOST"),
         port = int(os.environ.get("FLASK_RUN_PORT")),
         load_dotenv = True
