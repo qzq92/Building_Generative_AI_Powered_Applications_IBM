@@ -1,8 +1,7 @@
 from dotenv import load_dotenv
-from load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
-from langchain_openai import ChatOpenAI
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.prompts import PromptTemplate
+from openai import OpenAI
+from VoiceAssistant.load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
+from langchain_core.prompts import  PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
 import requests
@@ -188,48 +187,48 @@ def process_message(user_message: str) -> str:
     
     # Call the OpenAI Api to process our prompt
     is_openai_enabled = os.environ.get("OPENAPI_CHATMODEL_API_CALL_ENABLED", default="")
+    prompt = "Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations."
 
     if is_openai_enabled:
-        print("Using OpenAI model")
-        # Set the prompt for OpenAI API
-        template = """\
-        Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations.
-        
-        Question: {question}
-        
-        Your response:
-        """
-        llm = ChatOpenAI(
+        print(f"Using OpenAI model for input: {user_message}")
+
+        # llm = ChatOpenAI(
+        #     model="gpt-3.5-turbo",
+        #     api_key=os.environ.get("OPENAI_API_KEY"),
+        # )
+        # Set the prompt for OpenAI Api
+
+        # # Call the OpenAI Api to process our prompt
+        openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),)
+        openai_response = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
-            api_key=os.environ.get("OPENAI_API_KEY"),
-            temperature=0,
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": user_message}
+            ],
+            max_tokens=4000
         )
-
-
+        print("openai response:", openai_response)
+        # Parse the response to get the response message for our prompt
+        response_text = openai_response.choices[0].message.content
+        return response_text
     else:
-        print("Using Mistral 7B model")
-        template = """\
-        <s>[INST] Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations.
-        
-        Question: {question}"
-        
-        Your response: [/INST]
+        print("Using mistralai/Mixtral-8x7B-Instruct-v0.1")
+
+        template = """<s>[INST] Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations.
+        Answer the question below :
+        {question} [/INST] </s>
         """
+
+        prompt = PromptTemplate.from_template(template=template, input_variables=["question"])
         llm = HuggingFaceEndpoint(
             huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
-            repo_id="mistralai/Mistral-7B-Instruct-v0.2",
-            pipeline_kwargs={
-                "max_length": 128,
-            },
-            temperature=0,
+            repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
+            max_new_tokens=512
+
         )
     
-    #LCEL chain
-    llm_chain = (
-        {"question": RunnablePassthrough()}
-        | PromptTemplate.from_template(template=template)
-        | llm
-    )
-    response_text = llm_chain.invoke(input={"question": user_message})
-    print(response_text)
-    return response_text.content
+        llm_chain = prompt | llm
+        response_text = llm_chain.invoke(user_message)
+        print(response_text)
+        return response_text.content

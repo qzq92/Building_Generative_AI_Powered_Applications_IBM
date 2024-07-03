@@ -1,10 +1,10 @@
 import json
 from flask import Flask, render_template, request
-from worker import speech_to_text, text_to_speech, process_message
 from flask_cors import CORS
 import os
 import numpy as np
 import base64
+from VoiceAssistant.worker import speech_to_text, text_to_speech, process_message
 
 # Define Flask app
 app = Flask(__name__)
@@ -44,7 +44,7 @@ def speech_to_text_route() -> str:
 @app.route('/process-message', methods=['POST'])
 def process_message_route():
     user_message = request.json['userMessage'] # Get user's message from their request
-    print('user_message', user_message)
+    print('user_message:', user_message)
 
     # Call openai_process_message function to process the user's message and get a response back
     openai_response_text = process_message(user_message)
@@ -92,5 +92,4 @@ if __name__ == "__main__":
         debug = True,
         host = os.environ.get("FLASK_RUN_HOST"),
         port = int(os.environ.get("FLASK_RUN_PORT")),
-        load_dotenv = True
     )
