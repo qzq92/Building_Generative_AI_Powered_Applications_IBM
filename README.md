@@ -29,35 +29,46 @@ PYTHONPATH = <REPOSITORY PATH>
 
 # For Image Captioning
 BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-large"
-VISUALQA_IMAGE_FILENAME = "demo_image.jpg" ## For imagecaptioning.py use
-IMAGES_SOURCE_URL = "https://en.wikipedia.org/wiki/IBM" ## For automate_url_caption.py use
-MIN_RES_PIXELS = "400" ## As long it is positive
-MODEL_CAPTION_MAX_TOKEN = "300" ## As long it is positive
+# For imagecaptioning.py use
+VISUALQA_IMAGE_FILENAME = "demo_image.jpg"
+# For automate_url_caption.py use
+IMAGES_SOURCE_URL = "https://en.wikipedia.org/wiki/IBM"
+
+# min image resolution to process
+MIN_RES_PIXELS = "400"
+# max token for caption
+MODEL_CAPTION_MAX_TOKEN = "300"
 
 # For Chatbot. Please select a relevant HuggingFace model that can fit and run on your computer.
-CHATBOT_MODEL_NAME = <Your LLM Chat model> #E.g "facebook/blenderbot-400M-distill"
-CHATBOT_MODEL_TEMPERATURE = "0.8" # Anything above 0 but less than 1. A float value
-CHATBOT_MODEL_MAX_LENGTH = "80" # Chatbot max length generation. Must be positive integer.
+CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
+ # Anything above 0 but less than 1. A float value
+CHATBOT_MODEL_TEMPERATURE = "0.8"
+# Chatbot max length generation. Must be positive integer.
+CHATBOT_MODEL_MAX_LENGTH = "80"
 
 # For VoiceAssistant. Refer to STT models, https://huggingface.co/models?pipeline_tag=automatic-speech-recognition and TTS models page at https://huggingface.co/models?pipeline_tag=text-to-speech
 
 ## For long form transcription, please use "distil-whisper/distil-large-v3". STT Config here
-HUGGINGFACE_STT_MODEL_NAME = <Your STT model> #E.g "openai/whisper-small"
-HUGGINGFACE_STT_MODEL_MAX_TOKEN = "128" # STT max token generation. Must be positive integer.
+HUGGINGFACE_STT_MODEL_NAME = "openai/whisper-small"
+HUGGINGFACE_STT_MODEL_MAX_TOKEN = "128"
 HUGGINGFACE_STT_MODEL_TEMPERATURE = "0.0"
 
-## TTS Config here.
-HUGGINGFACE_TTS_MODEL_NAME = "microsoft/speecht5_tts"
+# Chatbot call control
+OPENAPI_CHATMODEL_API_CALL_ENABLED = "1" # Set empty string if openapi chatmodel is not to be used
+
+## TTS Config here. Model example #"microsoft/speecht5_tts"
+HUGGINGFACE_TTS_MODEL_NAME = "suno/bark-small"
 HUGGINGFACE_TTS_MODEL_TEMPERATURE = "0.0"
-TTS_API_CALL_ENABLED = "0" # will route tts model use to above. Other value will mean offline inference
+# Indicate "1" to enable tts api call.
+TTS_API_CALL_ENABLED = ""
 
-# Gradio Config for Server and Port.
-GRADIO_SERVER_NAME = <Name of DNS Resolvable Server or IP Address> #E.g "127.0.0.1"
-GRADIO_SERVER_PORT = <Your preferred port> #E.g "7860"
+# Gradio Config for GRADIO_SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. GRADIO_SERVER_PORT DEFAULTS to 7860 if empty.
+GRADIO_SERVER_NAME = "127.0.0.1"
+GRADIO_SERVER_PORT = "7860"
 
-# FLASK CONFIG. SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. SERVER_PORT DEFAULTS to 5000 if empty.
-FLASK_RUN_HIST = <Host Name/IP> #E.g "127.0.0.1"
-FLASK_RUN_PORT = <Your preferred port> #E.g "7860"
+# FLASK CONFIG. FLASK_RUN_HIST DEFAULTS TO 127.0.0.1 if empty. FLASK_RUN_PORT DEFAULTS to 5000 if empty.
+FLASK_RUN_HIST = "0.0.0.0"
+FLASK_RUN_PORT = "5001"
 ```
 
 Corresponding Javascipt to be edited (For chatbot app only)

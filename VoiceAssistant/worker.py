@@ -160,14 +160,13 @@ def text_to_speech(input_text: str) -> np.ndarray:
     # For BarkModel, which doesnt need vocoder to generate speech waves
     else:
         inputs = processor(
-            text=input_text,
+            text=[input_text],
             return_tensors="pt",
-            voice_preset="v2/en_speaker_6"
         )
-
+        # a mono 24 kHz speech
         speech_array = model.generate(
             **inputs,
-            threshold=0.5
+            do_sample=True
         ).numpy()
 
     speech_array = np.array(speech_array, dtype=np.float64)
@@ -215,12 +214,16 @@ def process_message(user_message: str) -> str:
     else:
         print("Using mistralai/Mixtral-8x7B-Instruct-v0.1")
 
+        # Template used for mixtral model
         template = """<s>[INST] Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations.
         Answer the question below :
         {question} [/INST] </s>
         """
 
-        prompt = PromptTemplate.from_template(template=template, input_variables=["question"])
+        prompt = PromptTemplate(
+            template=template,
+            input_variables=["question"]
+        )
         llm = HuggingFaceEndpoint(
             huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
             repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -230,5 +233,4 @@ def process_message(user_message: str) -> str:
     
         llm_chain = prompt | llm
         response_text = llm_chain.invoke(user_message)
-        print(response_text)
-        return response_text.content
+        return response_text

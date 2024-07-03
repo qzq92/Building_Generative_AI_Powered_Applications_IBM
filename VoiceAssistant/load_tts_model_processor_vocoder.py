@@ -1,5 +1,5 @@
 from typing import Tuple, Union
-from transformers import BarkModel, BarkProcessor, SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
+from transformers import  AutoProcessor, AutoModel, SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
 from datasets import load_dataset
 import torch
 
@@ -21,8 +21,8 @@ def get_speaker_embedding() -> torch.tensor:
     return speaker_embeddings
 
 def load_tts_components(tts_model_name:str) -> Tuple[
-    Union[SpeechT5Processor, BarkProcessor],
-    Union[SpeechT5ForTextToSpeech,BarkModel],
+    Union[SpeechT5Processor, AutoProcessor],
+    Union[SpeechT5ForTextToSpeech, AutoModel],
     Union[SpeechT5HifiGan , None]
 ]:
     """Function which returns text-to-speech components involving processor, model and vocoder. Currently supports model of suno/bark and microsoft/speecht5 model.'
@@ -61,10 +61,10 @@ def load_tts_components(tts_model_name:str) -> Tuple[
     elif "suno/bark" in tts_model_name:
         vocoder = None
         try:
-            model = BarkModel.from_pretrained(
+            model = AutoModel.from_pretrained(
                 pretrained_model_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
             )
-            processor = BarkProcessor.from_pretrained(
+            processor = AutoProcessor.from_pretrained(
                 pretrained_processor_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
             )
 

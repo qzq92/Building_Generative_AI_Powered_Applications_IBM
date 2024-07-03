@@ -23,6 +23,7 @@ if __name__ == "__main__":
         model_name=model_name, token=hface_auth_token
     )
 
+    # Conversational loop prompted by > with tracking
     while True:
         history_string = "\n".join(conversation_history)
 
