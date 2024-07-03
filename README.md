@@ -159,6 +159,9 @@ Access the Gradio Interface via the host IP/Port specified and you should see a 
 Sample audio transcription from file:
 ![SampleAudioTranscription](images/SampleAudioFileTranscription.png)
 
+Sample audio recording process:
+![SampleAudioRecordingProcess](images/SampleGradioVoiceRecording.png)
+
 Disclaimer: Do expect transcription in accuracies as results are largely dependent on the quality and length of audio file provided.  
 
 ### 3B. Simple VoiceAssistant application
