@@ -1,6 +1,6 @@
+from typing import Tuple, Union
 from transformers import BarkModel, BarkProcessor, SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
 from datasets import load_dataset
-from typing import Tuple, Union
 import torch
 
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -15,8 +15,8 @@ def get_speaker_embedding() -> torch.tensor:
 
     embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
 
-    speaker_embeddings = embeddings_dataset[7306]["xvector"]
-    speaker_embeddings = torch.tensor(speaker_embeddings).unsqueeze(0)
+    speaker_embeddings_xvec = embeddings_dataset[7306]["xvector"]
+    speaker_embeddings = torch.tensor(speaker_embeddings_xvec).unsqueeze(0)
     
     return speaker_embeddings
 
@@ -37,31 +37,32 @@ def load_tts_components(tts_model_name:str) -> Tuple[
     vocoder_name = "microsoft/speecht5_hifigan"
     if "speecht5" in tts_model_name.lower():
         vocoder = SpeechT5HifiGan.from_pretrained(
-            pretrained_processor_name_or_path=vocoder_name, torch_dtype=TORCH_DTYPE
+            pretrained_model_name_or_path=vocoder_name, torch_dtype=TORCH_DTYPE
         )
+        # Load pretrained processor,model,vocoder and embeddings involving speecht5
         try:
-            # Load pretrained processor,model,vocoder and embeddings
             processor = SpeechT5Processor.from_pretrained(
-                pretrained_processor_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE)
+                pretrained_model_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE)
+            
             model = SpeechT5ForTextToSpeech.from_pretrained(
-                pretrained_processor_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE)
+                pretrained_model_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE)
 
         except (ValueError, MemoryError):
             print("Defaulting to Microsoft's speecht5 model")
             t5_model_name = "microsoft/speecht5"
 
             processor = SpeechT5Processor.from_pretrained(
-                t5_model_name, torch_dtype=TORCH_DTYPE
+                pretrained_model_name_or_path=t5_model_name, torch_dtype=TORCH_DTYPE
             )
             model = SpeechT5ForTextToSpeech.from_pretrained(
-                t5_model_name, torch_dtype=TORCH_DTYPE
+                pretrained_model_name_or_path=t5_model_name, torch_dtype=TORCH_DTYPE
             )
-
+    # Load pretrained bark processor, model
     elif "suno/bark" in tts_model_name:
         vocoder = None
         try:
             model = BarkModel.from_pretrained(
-                pretrained_processor_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
+                pretrained_model_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
             )
             processor = BarkProcessor.from_pretrained(
                 pretrained_processor_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
@@ -70,7 +71,7 @@ def load_tts_components(tts_model_name:str) -> Tuple[
         except (ValueError, MemoryError):
             print(f"Defaulting to {default_model} model")
             model = BarkModel.from_pretrained(
-                pretrained_processor_name_or_path=default_model,torch_dtype=TORCH_DTYPE
+                pretrained_model_name_or_path=default_model,torch_dtype=TORCH_DTYPE
             )
             processor = BarkProcessor.from_pretrained(
                 pretrained_processor_name_or_path=default_model, torch_dtype=TORCH_DTYPE
@@ -81,12 +82,13 @@ def load_tts_components(tts_model_name:str) -> Tuple[
             # Offload idle submodels if using CUDA
             if DEVICE == "cuda:0":
                 model.enable_cpu_offload()
-
+    # Fallback case
     else:
         print(f"Defaulting to {default_model} model as entered model is unsupoorted.")
         model = BarkModel.from_pretrained(default_model)
         # performs kernel fusion under the hood. You can gain 20% to 30% in speed with zero performance degradation.
         model = model.to_bettertransformer()
+        
         # Offload idle submodels if using CUDA
         if DEVICE == "cuda:0":
             model.enable_cpu_offload()
