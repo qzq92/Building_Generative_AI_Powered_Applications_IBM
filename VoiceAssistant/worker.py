@@ -1,13 +1,16 @@
-from openai import OpenAI
 from dotenv import load_dotenv
 from load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
+from langchain_openai import ChatOpenAI
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.prompts import PromptTemplate
+from langchain_huggingface import HuggingFaceEndpoint
 from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
 import requests
 import os
 import numpy as np
 import torch
 
-# Load
+# Load env
 load_dotenv()
 
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -113,8 +116,8 @@ def text_to_speech(input_text: str) -> np.ndarray:
     Returns:
         np.ndarray: Speech values in numpy array.
     """
-    model_id = os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
-    if os.environ.get("TTS_API_CALL_ENABLED") == "1":
+    model_id = os.environ.get("HUGGINGFACE_TTS_MODEL_NAME", default="")
+    if os.environ.get("TTS_API_CALL_ENABLED"):
         print("Using API calls for Text-to-speech synthesization\n")
         # Set the headers for our HTTP request
         headers = {
@@ -172,30 +175,61 @@ def text_to_speech(input_text: str) -> np.ndarray:
     return speech_array
 
 
-def openai_process_message(user_message: str) -> str:
-    """Function which processes user message input with OpenAI models and generates completion as response.
+def process_message(user_message: str) -> str:
+    """Function which uses MistralAI Chat Model to process chat inputs as a fallback in the event that 
+    'OPENAPI_CHATMODEL_API_CALL_ENABLED' environment is set to none. Otherwise, OpenAI default model would be used.
 
     Args:
         user_message (str): User provided message in string.
 
     Returns:
-        str: OpenAI LLM model completion string.
+        str: Langchain LLM completion.
     """
-    # Set the prompt for OpenAI Api
-    prompt = "Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations."
+    
     # Call the OpenAI Api to process our prompt
-    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    is_openai_enabled = os.environ.get("OPENAPI_CHATMODEL_API_CALL_ENABLED", default="")
 
-    openai_response = openai_client.chat.completions.create(
-        model = os.environ.get("OPENAI_MODEL_NAME"),
-        messages = [
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": user_message}
-        ],
-        max_tokens = int(os.environ.get("OPENAI_MAX_TOKEN", "4000")),
+    if is_openai_enabled:
+        print("Using OpenAI model")
+        # Set the prompt for OpenAI API
+        template = """\
+        Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations.
+        
+        Question: {question}
+        
+        Your response:
+        """
+        llm = ChatOpenAI(
+            model="gpt-3.5-turbo",
+            api_key=os.environ.get("OPENAI_API_KEY"),
+            temperature=0,
+        )
+
+
+    else:
+        print("Using Mistral 7B model")
+        template = """\
+        <s>[INST] Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations.
+        
+        Question: {question}"
+        
+        Your response: [/INST]
+        """
+        llm = HuggingFaceEndpoint(
+            huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
+            repo_id="mistralai/Mistral-7B-Instruct-v0.2",
+            pipeline_kwargs={
+                "max_length": 128,
+            },
+            temperature=0,
+        )
+    
+    #LCEL chain
+    llm_chain = (
+        {"question": RunnablePassthrough()}
+        | PromptTemplate.from_template(template=template)
+        | llm
     )
-
-    # Parse the response to get the response message for our prompt
-    print("Generating speech with OpenAI...")
-    response_text = openai_response.choices[0].message.content
-    return response_text
+    response_text = llm_chain.invoke(input={"question": user_message})
+    print(response_text)
+    return response_text.content
