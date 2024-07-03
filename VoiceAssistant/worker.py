@@ -1,14 +1,10 @@
-import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
 from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
-from datetime import datetime
-from bark import SAMPLE_RATE
 import requests
 import os
 import numpy as np
-import soundfile as sf
 import torch
 
 # Load
@@ -108,14 +104,14 @@ def speech_to_text(audio_binary: list) -> str:
     result = pipe(audio_binary)
     return result["text"]
 
-def text_to_speech(input_text: str) -> json:
+def text_to_speech(input_text: str) -> np.ndarray:
     """Function which decides to use TTS model inference endpoint API or conduct offline inference based on environment variable 'HUGGINGFACE_TTS_MODEL_NAME' to perform text to speech generation.
 
     Args:
         input_text (str): Input text to be synthesized.
 
     Returns:
-        json: Response in json object.
+        np.ndarray: Speech values in numpy array.
     """
     model_id = os.environ.get("HUGGINGFACE_TTS_MODEL_NAME")
     if os.environ.get("TTS_API_CALL_ENABLED") == "1":
@@ -148,16 +144,17 @@ def text_to_speech(input_text: str) -> json:
     print(f"Running offline inference with {model_id}")
     # Generate processor
     model, processor, vocoder = load_tts_components(tts_model_name=model_id)
-    # For Microsoft SpeechT5
+    # For Microsoft SpeechT5.# Default sampling rate: 16khz
     if vocoder:
         inputs = processor(text=input_text, return_tensors="pt")
         speaker_embeddings = get_speaker_embedding()
-        speech = model.generate_speech(
+        speech_array = model.generate_speech(
             inputs["input_ids"],
             speaker_embeddings=speaker_embeddings,
             vocoder=vocoder,
             threshold=0.5
-        )
+        ).numpy()
+
     # For BarkModel, which doesnt need vocoder to generate speech waves
     else:
         inputs = processor(
@@ -166,33 +163,14 @@ def text_to_speech(input_text: str) -> json:
             voice_preset="v2/en_speaker_6"
         )
 
-        speech = model.generate(
+        speech_array = model.generate(
             **inputs,
             threshold=0.5
-        ).cpu().numpy()
+        ).numpy()
 
-    # Add short silence between words
-    silence = np.zeros(int(0.25 * SAMPLE_RATE))
+    speech_array = np.array(speech_array, dtype=np.float64)
+    return speech_array
 
-    new_speech = np.asarray(np.append(np.array(speech_val), silence) for speech_val in speech)
-    # Returns dict of audio and sampling rate
-    print(new_speech)
-
-    # Write audio file after synthesizing
-    tts_audio_files_dir = "tts_audio_files"
-    os.makedirs(tts_audio_files_dir, exist_ok=True)
-    print("Writing to audio file after generating speech...")
-    datetime_now_fmt = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-    # Write to folder
-    tts_audio_filename =  f"speech_{datetime_now_fmt}.mp3"
-    audio_filepath = os.path.join(tts_audio_files_dir, tts_audio_filename)
-    try:
-        sf.write(audio_filepath, speech, samplerate=44100)
-    except TypeError:
-        print(f"Unable to write audio file as {tts_audio_filename} due to invalid format")
-
-    return speech
 
 def openai_process_message(user_message: str) -> str:
     """Function which processes user message input with OpenAI models and generates completion as response.
