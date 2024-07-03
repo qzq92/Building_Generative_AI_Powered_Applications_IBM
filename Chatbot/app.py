@@ -29,7 +29,10 @@ def handle_prompt() -> str:
     Returns:
         str: Chatbot response to POST request.
     """
-    model_name = os.environ.get("CHATBOT_MODEL_NAME")
+    model_name = os.environ.get(
+        "CHATBOT_MODEL_NAME",
+        default="facebook/blenderbot-400M-distill"
+    )
     # Load model (download on first run and reference local installation for consequent runs)
     hface_auth_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
 
