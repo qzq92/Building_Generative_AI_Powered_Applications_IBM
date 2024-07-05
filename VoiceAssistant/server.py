@@ -26,11 +26,11 @@ def speech_to_text_route() -> str:
     """
     print("Processing speech-to-text")
     audio_binary = request.data # Get the user's speech from their request
-    print(audio_binary)
-    print(type(audio_binary))
-    
+    print("Request...")
+    print(request)
     # Call speech_to_text function to transcribe the speech which returns a text string
     text = speech_to_text(audio_binary)
+
     # Return the response back to the user in JSON format
     response = app.response_class(
         response=json.dumps({'text': text}),
@@ -64,6 +64,7 @@ def process_message_route():
     print("Encoding with base64 and decode to utf8")
 
     if np.any(openai_response_speech):
+        print("Decoding text to speech")
         openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
         # Send a JSON response back to the user containing their message's response both in text and speech formats. JSON key is referenced by script.js
         response = app.response_class(
