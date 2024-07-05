@@ -2,10 +2,11 @@ import json
 from flask import Flask, render_template, request
 from flask_cors import CORS
 import os
-import numpy as np
+import uuid
 import base64
 from VoiceAssistant.worker import speech_to_text, text_to_speech, process_message
-
+import soundfile as sf
+ 
 # Define Flask app
 app = Flask(__name__)
 # Allow request to be made to different domains
@@ -45,30 +46,47 @@ def process_message_route():
     print('user_message:', user_message)
 
     # Call openai_process_message function to process the user's message and get a response back
-    openai_response_text = process_message(user_message)
+    response_text = process_message(user_message)
     # Clean the response to remove any emptylines
-    openai_response_text = os.linesep.join([s for s in openai_response_text.splitlines() if s])
+    response_text = os.linesep.join([s for s in response_text.splitlines() if s])
 
+    print(f"Responded text: {response_text}")
     # Call our text_to_speech function to convert OpenAI Api's reponse to speech
     # The openai_response_speech is a type of audio data, we can't directly send this inside a json as it can only store textual data
-    openai_response_speech = text_to_speech(openai_response_text)
+    response_speech, sample_rate = text_to_speech(response_text)
 
     print("Before encoding with base 64 and decode to utf8")
-    print(openai_response_speech)
+    print(response_speech)
 
-    # Lossless commpression with base64 and decode to utf8
+    # Write ID:
+    random_uuid = str(uuid.uuid1())
+    random_uuid = random_uuid.replace("-","_")
+    audio_file = str(random_uuid) + ".wav"
 
-    print("Encoding with base64 and decode to utf8")
+    # Define save path
+    os.makedirs(os.path.dirname(os.path.abspath(__file__)), "bot_audio", exist_ok=True)
+    save_audio_path = os.path.join("bot_audio", audio_file)
+    print("Writing speech file")
+    sf.write(
+        file=save_audio_path,
+        samplerate=sample_rate,
+        data=response_speech
+    )
 
-    if openai_response_text != "undefined":
+
+    if response_text != "undefined":
         print("Decoding text to speech")
-        openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
+        response_speech = base64.b64encode(response_speech).decode('utf-8')
         # Send a JSON response back to the user containing their message's response both in text and speech formats. JSON key is referenced by script.js
         response = app.response_class(
-            response=json.dumps({
-                "ResponseText": openai_response_text,
-                "ResponseSpeech": openai_response_speech
-            }),
+            response=json.dumps(
+                {
+                "ResponseText": response_text,
+                "ResponseSpeech": response_speech,
+                "ResponseAudioFile": save_audio_path,
+                "ResponseID": random_uuid
+                }
+            ),
             status=200,
             mimetype='application/json'
         )
@@ -76,7 +94,8 @@ def process_message_route():
         # Send a JSON response back to the user containing their message's response both in text only with json.dumps that convert python objects
         response = app.response_class(
             response=json.dumps({
-                "ResponseText": openai_response_text,
+                "ResponseText": response_text,
+                "ResponseID": random_uuid
             }),
             status=200,
             mimetype='application/json'

@@ -1,5 +1,5 @@
 from typing import Tuple, Union
-from transformers import  AutoProcessor, AutoModel, SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
+from transformers import  AutoProcessor, BarkModel, SpeechT5Processor, SpeechT5ForTextToSpeech, SpeechT5HifiGan
 from datasets import load_dataset
 import torch
 
@@ -22,7 +22,7 @@ def get_speaker_embedding() -> torch.tensor:
 
 def load_tts_components(tts_model_name:str) -> Tuple[
     Union[SpeechT5Processor, AutoProcessor],
-    Union[SpeechT5ForTextToSpeech, AutoModel],
+    Union[SpeechT5ForTextToSpeech, BarkModel],
     Union[SpeechT5HifiGan , None]
 ]:
     """Function which returns text-to-speech components involving processor, model and vocoder. Currently supports model of suno/bark and microsoft/speecht5 model.'
@@ -34,7 +34,6 @@ def load_tts_components(tts_model_name:str) -> Tuple[
     """
 
     # Default model and vocoder (for speecht5)
-    default_model = "suno/bark-small"
     if "speecht5" in tts_model_name.lower():
         vocoder = SpeechT5HifiGan.from_pretrained(
             pretrained_model_name_or_path="microsoft/speecht5_hifigan", torch_dtype=TORCH_DTYPE
@@ -61,7 +60,7 @@ def load_tts_components(tts_model_name:str) -> Tuple[
     elif "suno/bark" in tts_model_name:
         vocoder = None
         try:
-            model = AutoModel.from_pretrained(
+            model = BarkModel.from_pretrained(
                 pretrained_model_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
             )
             processor = AutoProcessor.from_pretrained(
@@ -70,7 +69,7 @@ def load_tts_components(tts_model_name:str) -> Tuple[
 
         except (ValueError, MemoryError):
             print(f"Defaulting to {default_model} model")
-            model = AutoModel.from_pretrained(
+            model = BarkModel.from_pretrained(
                 pretrained_model_name_or_path=default_model,torch_dtype=TORCH_DTYPE
             )
             processor = AutoProcessor.from_pretrained(
@@ -84,10 +83,13 @@ def load_tts_components(tts_model_name:str) -> Tuple[
                 model.enable_cpu_offload()
     # Fallback case
     else:
+        default_model = "suno/bark"
         print(f"Defaulting to {default_model} model as entered model is unsupoorted.")
-        model = AutoProcessor.from_pretrained(
-            pretrained_model_name_or_path=default_model,
-            torch_dtype=TORCH_DTYPE
+        model = BarkModel.from_pretrained(
+            pretrained_model_name_or_path=default_model,torch_dtype=TORCH_DTYPE
+        )
+        processor = AutoProcessor.from_pretrained(
+            pretrained_model_name_or_path=default_model, torch_dtype=TORCH_DTYPE
         )
         # performs kernel fusion under the hood. You can gain 20% to 30% in speed with zero performance degradation.
         model = model.to_bettertransformer()

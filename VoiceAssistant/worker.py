@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 from openai import AuthenticationError, RateLimitError, OpenAI
-import pyaudio
 from VoiceAssistant.load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
 from langchain_core.prompts import  PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
@@ -98,18 +97,18 @@ def speech_to_text(audio_binary: bytes) -> str:
     result = pipe(audio_binary)
     return result["text"]
 
-def text_to_speech(input_text: str) -> np.ndarray:
+def text_to_speech(input_text: str) -> Tuple[np.ndarray,int]:
     """Function which decides to use TTS model inference endpoint API or conduct offline inference based on environment variable 'HUGGINGFACE_TTS_MODEL_NAME' to perform text to speech generation.
 
     Args:
         input_text (str): Input text to be synthesized.
 
     Returns:
-        np.ndarray: Speech values in numpy array.
+        Tuple[np.ndarray,int]: Generated speech values in numpy array and corresponding sampling rate based on TTS model used.
     """
     model_id = os.environ.get(
         "HUGGINGFACE_TTS_MODEL_NAME",
-        default="suno/bark-small"
+        default="suno/bark"
     )
     if os.environ.get("TTS_API_CALL_ENABLED"):
         print("Using API calls for Text-to-speech synthesization\n")
@@ -151,21 +150,22 @@ def text_to_speech(input_text: str) -> np.ndarray:
             vocoder=vocoder,
             threshold=0.5
         ).numpy()
-
-    # For other models, which doesnt need vocoder to generate speech waves
+        sampling_rate = 16000
+    # For bark models, which doesnt need vocoder to generate speech waves
     else:
+        # Tokenize and encode th e text prompt
         inputs = processor(
             text=[input_text],
+            voice_preset="v2/en_speaker_6",
             return_tensors="pt",
         )
         # a mono 24 kHz speech
         speech_array = model.generate(
             **inputs,
-            do_sample=True
-        ).numpy()
+        ).cpu().numpy().squeeze()
+        sampling_rate= model.generation_config.sample_rate
 
-    speech_array = np.array(speech_array, dtype=np.float64)
-    return speech_array
+    return speech_array, sampling_rate
 
 
 def process_message(user_message: str) -> str:

@@ -36,6 +36,8 @@ const getSpeechToText = async (userRecording) => {
   return response.text;
 };
 
+
+// Call process-message, handled by flask python function
 const processUserMessage = async (userMessage) => {
   let response = await fetch(baseUrl + "/process-message", {
     method: "POST",
@@ -159,7 +161,9 @@ const populateBotResponse = async (userMessage) => {
   responses.push(response);
 
   //Get random button ID associated for button associated with playing bot response audio. Map button ID to index of response
-  const repeatButtonID = getRandomID();
+  // const repeatButtonID = getRandomID();
+
+  const repeatButtonID = response.ResponseID
   botRepeatButtonIDToIndexMap[repeatButtonID] = responses.length - 1;
 
 
