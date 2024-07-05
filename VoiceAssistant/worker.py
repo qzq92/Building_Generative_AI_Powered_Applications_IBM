@@ -1,13 +1,16 @@
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import AuthenticationError, RateLimitError
+from langchain_openai import ChatOpenAI
 from VoiceAssistant.load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
 from langchain_core.prompts import  PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
+from typing import Tuple
 import requests
 import os
 import numpy as np
 import torch
+import numpy as np
 
 # Load env
 load_dotenv()
@@ -15,35 +18,65 @@ load_dotenv()
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 
-def speech_to_text(audio_binary: list) -> str:
+
+def get_mistral_prompt_and_llm()-> Tuple(str, HuggingFaceEndpoint):
+    """Function which returns preconstructed prompt template required by 
+    mistralai/Mixtral-8x7B-Instruct-v0.1 LLM model and the LLM model itself.
+    
+    Returns:
+        str: Transcribed speech in text.
+    """
+    # Prompt template required for mixtral model
+    template = """<s>[INST] {prompt_str}
+    Answer the question below:
+    {question} [/INST] </s>
+    """
+
+    llm = HuggingFaceEndpoint(
+        huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
+        repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
+        max_new_tokens=512
+    )
+
+    return template, llm
+
+def speech_to_text(audio_binary: bytes) -> str:
     """The function simply takes audio_binary (a list of values) as the only parameter and then calls the relevant STT model based on configuration for transcribing the audio.
 
     Args:
-        audio_binary (str): Array of values sampled from audio.
+        audio_binary (bytes): Audio data in raw bytes.
 
     Returns:
         str: Transcribed speech in text.
     """
-
     default_model = "facebook/s2t-small-librispeech-asr"
 
     stt_model = os.environ.get("HUGGINGFACE_STT_MODEL_NAME", default=default_model)
 
     stt_temperature = float(
-    os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", 0.0)
-)
+        os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", default=0.1)
+    )
     # Correction mechanism
-    if stt_temperature < 0:
-        print("Encountered negative temperature value, overriding to 0.0 instead.")
-        stt_temperature = 0.0
+    if stt_temperature <= 0:
+        print("Encountered non-positive temperature value, overriding to 0.1 instead.")
+        stt_temperature = 0.1
 
+    print(audio_binary)
+    print()
+    
+    # Convert audio sound bytes to numpy array
+    audio_binary_buffer = np.frombuffer(audio_binary, dtype='int16')
+    print(audio_binary_buffer)
     if "openai/whisper" in stt_model.lower():
+        print(f"Using openai whisper model: {stt_model}")
         try:    
             model = WhisperForConditionalGeneration.from_pretrained(
                 pretrained_model_name_or_path=stt_model
             )
             processor = WhisperProcessor.from_pretrained(
-                pretrained_model_name_or_path=stt_model
+                pretrained_model_name_or_path=stt_model,
+                language="en",
+                task="transcribe"
             )
         except ValueError:
             print("Invalid OpenAI model chosen. Default to openai/whisper-tiny.en model ")
@@ -52,12 +85,16 @@ def speech_to_text(audio_binary: list) -> str:
                 pretrained_model_name_or_path=stt_model
             )
             processor = WhisperProcessor.from_pretrained(
-                pretrained_model_name_or_path=stt_model
+                pretrained_model_name_or_path=stt_model,
+                language="en",
+                task="transcribe"
             )
 
-        # Process features of audio
+        # pre-process to get the input features
         input_features = processor(
-            audio_binary, sampling_rate=44100, return_tensors="pt"
+            audio_binary_buffer,
+            sampling_rate=16000,
+            return_tensors="pt"
         ).input_features
         
 
@@ -69,10 +106,14 @@ def speech_to_text(audio_binary: list) -> str:
             do_sample=True,
             temperature=stt_temperature
         )
+
+        # post-process token ids to text
         transcription = processor.batch_decode(
             predicted_ids,
             skip_special_tokens=True,
         )
+
+        print("Transcribing...")
         print(transcription)
 
         return transcription[0]
@@ -103,6 +144,7 @@ def speech_to_text(audio_binary: list) -> str:
         framework="pt",
         temperature=stt_temperature
     )
+    print("Transcribing...")
     result = pipe(audio_binary)
     return result["text"]
 
@@ -174,8 +216,7 @@ def text_to_speech(input_text: str) -> np.ndarray:
 
 
 def process_message(user_message: str) -> str:
-    """Function which uses MistralAI Chat Model to process chat inputs as a fallback in the event that 
-    'OPENAPI_CHATMODEL_API_CALL_ENABLED' environment is set to none. Otherwise, OpenAI default model would be used.
+    """Function which uses OpenAI Chat Model to process message if the event that 'OPENAPI_CHATMODEL_API_CALL_ENABLED' environment is set. Otherwise, default prompt and LLM model based on 'mistralai/Mixtral-8x7B-Instruct-v0.1' would be used instead for message processing.
 
     Args:
         user_message (str): User provided message in string.
@@ -186,51 +227,57 @@ def process_message(user_message: str) -> str:
     
     # Call the OpenAI Api to process our prompt
     is_openai_enabled = os.environ.get("OPENAPI_CHATMODEL_API_CALL_ENABLED", default="")
-    prompt = "Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations."
+    prompt_str = "Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations at the end."
+
 
     if is_openai_enabled:
         print(f"Using OpenAI model for input: {user_message}")
+        # Prompt template required for mixtral model
+        template = """{prompt_str}
 
-        # llm = ChatOpenAI(
-        #     model="gpt-3.5-turbo",
-        #     api_key=os.environ.get("OPENAI_API_KEY"),
-        # )
-        # Set the prompt for OpenAI Api
+        Question: {question}
+        Helpful Answer:
+        """
+        # Use ChatOpenAI
+        try:
+            llm = ChatOpenAI(
+                model="gpt-3.5-turbo",
+                api_key=os.environ.get("OPENAI_API_KEY"),
+                max_retries=0
+            )
+        except (AuthenticationError, RateLimitError) as err:
+            print(f"Encountered Error {err}")
+            template, llm = get_mistral_prompt_and_llm()
 
         # # Call the OpenAI Api to process our prompt
-        openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),)
-        openai_response = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": user_message}
-            ],
-            max_tokens=4000
-        )
-        print("openai response:", openai_response)
-        # Parse the response to get the response message for our prompt
-        response_text = openai_response.choices[0].message.content
-        return response_text
+        # openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),)
+        # openai_response = openai_client.chat.completions.create(
+        #     model="gpt-3.5-turbo",
+        #     messages=[
+        #         {"role": "system", "content": prompt},
+        #         {"role": "user", "content": user_message}
+        #     ],
+        #     max_tokens=4000
+        # )
+        # print("openai response:", openai_response)
+        # # Parse the response to get the response message for our prompt
+        # response_text = openai_response.choices[0].message.content
+        # return response_text
+
+    # Use default
     else:
-        print("Using mistralai/Mixtral-8x7B-Instruct-v0.1")
+        template, llm = get_mistral_prompt_and_llm()
 
-        # Template used for mixtral model
-        template = """<s>[INST] Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations.
-        Answer the question below :
-        {question} [/INST] </s>
-        """
-
-        prompt = PromptTemplate(
-            template=template,
-            input_variables=["question"]
-        )
-        llm = HuggingFaceEndpoint(
-            huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
-            repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
-            max_new_tokens=512
-
-        )
-    
-        llm_chain = prompt | llm
+    prompt = PromptTemplate(
+        template=template,
+        input_variables=["question"],
+        partial_variables={"prompt_str": prompt_str},
+    )
+    # Chain prompt and llm
+    llm_chain = prompt | llm
+    try:
         response_text = llm_chain.invoke(user_message)
-        return response_text
+    except RateLimitError:
+        print("Encountered Rate Limit Error")
+    
+    return response_text
