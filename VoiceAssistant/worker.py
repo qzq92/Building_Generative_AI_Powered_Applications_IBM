@@ -161,6 +161,7 @@ def text_to_speech(input_text: str) -> np.ndarray:
         # a mono 24 kHz speech
         speech_array = model.generate(
             **inputs,
+            do_sample=True
         ).numpy()
 
     speech_array = np.array(speech_array, dtype=np.float64)
