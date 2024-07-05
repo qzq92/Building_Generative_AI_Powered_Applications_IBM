@@ -176,10 +176,11 @@ const populateBotResponse = async (userMessage) => {
       !lightMode ? " dark" : ""
     }'>${
       response.ResponseText
-    }</div><button id='${repeatButtonID}' class='btn volume repeat-button' onclick='playResponseAudio("data:audio/wav;base64," + responses[botRepeatButtonIDToIndexMap[this.id]].ResponseSpeech);console.log(this.id)'><i class='fa fa-volume-up'></i></button></div>`
+    }</div><button id='${repeatButtonID}' class='btn volume repeat-button' onclick='playResponseAudio("data:audio/wav;base64, "+responses[botRepeatButtonIDToIndexMap[this.id]].ResponseSpeech);console.log(this.id)'><i class='fa fa-volume-up'></i></button></div>`
   );
+
   //play audio
-  playResponseAudio("data:audio/wav;base64," + response.ResponseSpeech);
+  playResponseAudio("data:audio/wav;base64, " +responses[botRepeatButtonIDToIndexMap[repeatButtonID]].ResponseSpeech);
 
   scrollToBottom();
 };

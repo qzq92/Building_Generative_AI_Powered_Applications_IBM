@@ -6,8 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
-# Certs
-VoiceAssistant/certs/rootCA.crt
+# Audio folder
+VoiceAssistant/bot_audio
 
 # Env file
 .env

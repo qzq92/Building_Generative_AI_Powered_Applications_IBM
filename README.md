@@ -183,6 +183,8 @@ TTS_API_CALL_ENABLED = "0"
 **
 ```
 
+Only TTS Model supported: Microsoft's SpeechT5 and Suno/Bark model variants
+
 Run the following command to start the Flask service front end.
 
 ```

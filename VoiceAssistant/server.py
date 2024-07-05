@@ -6,7 +6,8 @@ import uuid
 import base64
 from VoiceAssistant.worker import speech_to_text, text_to_speech, process_message
 import soundfile as sf
- 
+import shutil
+
 # Define Flask app
 app = Flask(__name__)
 # Allow request to be made to different domains
@@ -64,8 +65,9 @@ def process_message_route():
     audio_file = str(random_uuid) + ".wav"
 
     # Define save path
-    os.makedirs(os.path.dirname(os.path.abspath(__file__)), "bot_audio", exist_ok=True)
-    save_audio_path = os.path.join("bot_audio", audio_file)
+    audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_audio")
+    os.makedirs(audio_dir, exist_ok=True)
+    save_audio_path = os.path.join(audio_dir, audio_file)
     print("Writing speech file")
     sf.write(
         file=save_audio_path,
@@ -73,17 +75,18 @@ def process_message_route():
         data=response_speech
     )
 
-
     if response_text != "undefined":
         print("Decoding text to speech")
-        response_speech = base64.b64encode(response_speech).decode('utf-8')
+        with open(save_audio_path, "rb") as binary_file:
+            # Read the whole file at once
+            data = binary_file.read()
+            response_speech = base64.b64encode(data).decode('utf-8')
         # Send a JSON response back to the user containing their message's response both in text and speech formats. JSON key is referenced by script.js
         response = app.response_class(
             response=json.dumps(
                 {
                 "ResponseText": response_text,
                 "ResponseSpeech": response_speech,
-                "ResponseAudioFile": save_audio_path,
                 "ResponseID": random_uuid
                 }
             ),
