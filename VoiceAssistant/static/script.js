@@ -153,12 +153,20 @@ const populateUserMessage = (userMessage, userRecording) => {
 const populateBotResponse = async (userMessage) => {
   await showBotLoadingAnimation();
   const response = await processUserMessage(userMessage);
+
+  console.log(response)
+  // store response to array
   responses.push(response);
 
+  //Get random button ID associated for button associated with playing bot response audio. Map button ID to index of response
   const repeatButtonID = getRandomID();
   botRepeatButtonIDToIndexMap[repeatButtonID] = responses.length - 1;
+
+
+  // hide when processing is done
   hideBotLoadingAnimation();
-  // Append the random message to the message list
+
+  // This line appends HTML to #message-list (assuming it's a container in the DOM) to display the bot's response (response.ResponseText). It also creates a button (<button>) with id equal to repeatButtonID. When clicked, this button triggers the playResponseAudio function with the base64-encoded audio data (response.ResponseSpeech)
   $("#message-list").append(
     `<div class='message-line'><div class='message-box${
       !lightMode ? " dark" : ""
@@ -166,7 +174,7 @@ const populateBotResponse = async (userMessage) => {
       response.ResponseText
     }</div><button id='${repeatButtonID}' class='btn volume repeat-button' onclick='playResponseAudio("data:audio/wav;base64," + responses[botRepeatButtonIDToIndexMap[this.id]].ResponseSpeech);console.log(this.id)'><i class='fa fa-volume-up'></i></button></div>`
   );
-
+  //play audio
   playResponseAudio("data:audio/wav;base64," + response.ResponseSpeech);
 
   scrollToBottom();
