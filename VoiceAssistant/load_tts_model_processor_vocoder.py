@@ -33,11 +33,11 @@ def load_tts_components(tts_model_name:str) -> Tuple[
         Tuple: Tuple containing pretrained text-to-speech processor, text-to-speech model and text-to-speech vocoder (if applicable). 
     """
 
+    # Default model and vocoder (for speecht5)
     default_model = "suno/bark-small"
-    vocoder_name = "microsoft/speecht5_hifigan"
     if "speecht5" in tts_model_name.lower():
         vocoder = SpeechT5HifiGan.from_pretrained(
-            pretrained_model_name_or_path=vocoder_name, torch_dtype=TORCH_DTYPE
+            pretrained_model_name_or_path="microsoft/speecht5_hifigan", torch_dtype=TORCH_DTYPE
         )
         # Load pretrained processor,model,vocoder and embeddings involving speecht5
         try:
@@ -65,16 +65,16 @@ def load_tts_components(tts_model_name:str) -> Tuple[
                 pretrained_model_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
             )
             processor = AutoProcessor.from_pretrained(
-                pretrained_processor_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
+                pretrained_model_name_or_path=tts_model_name, torch_dtype=TORCH_DTYPE
             )
 
         except (ValueError, MemoryError):
             print(f"Defaulting to {default_model} model")
-            model = BarkModel.from_pretrained(
+            model = AutoModel.from_pretrained(
                 pretrained_model_name_or_path=default_model,torch_dtype=TORCH_DTYPE
             )
-            processor = BarkProcessor.from_pretrained(
-                pretrained_processor_name_or_path=default_model, torch_dtype=TORCH_DTYPE
+            processor = AutoProcessor.from_pretrained(
+                pretrained_model_name_or_path=default_model, torch_dtype=TORCH_DTYPE
             )
         finally:
             # performs kernel fusion under the hood. You can gain 20% to 30% in speed with zero performance degradation.
@@ -85,14 +85,20 @@ def load_tts_components(tts_model_name:str) -> Tuple[
     # Fallback case
     else:
         print(f"Defaulting to {default_model} model as entered model is unsupoorted.")
-        model = BarkModel.from_pretrained(default_model)
+        model = AutoProcessor.from_pretrained(
+            pretrained_model_name_or_path=default_model,
+            torch_dtype=TORCH_DTYPE
+        )
         # performs kernel fusion under the hood. You can gain 20% to 30% in speed with zero performance degradation.
         model = model.to_bettertransformer()
         
         # Offload idle submodels if using CUDA
         if DEVICE == "cuda:0":
             model.enable_cpu_offload()
-        processor = BarkProcessor.from_pretrained(default_model)
+        processor = AutoProcessor.from_pretrained(
+            pretrained_model_name_or_path=default_model,
+            torch_dtype=TORCH_DTYPE
+        )
         vocoder = None
 
     # Load to necessary device
