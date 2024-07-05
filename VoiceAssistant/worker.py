@@ -1,10 +1,10 @@
 from dotenv import load_dotenv
-from openai import AuthenticationError, RateLimitError
-from langchain_openai import ChatOpenAI
+from openai import AuthenticationError, RateLimitError, OpenAI
+import pyaudio
 from VoiceAssistant.load_tts_model_processor_vocoder import load_tts_components, get_speaker_embedding
 from langchain_core.prompts import  PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
-from transformers import pipeline, WhisperProcessor,WhisperForConditionalGeneration, AutoModelForSpeechSeq2Seq, AutoProcessor
+from transformers import pipeline, AutoModelForSpeechSeq2Seq, AutoProcessor
 from typing import Tuple
 import requests
 import os
@@ -18,11 +18,10 @@ load_dotenv()
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 
-
-def get_mistral_prompt_and_llm()-> Tuple(str, HuggingFaceEndpoint):
+def get_mistral_prompt_and_llm()-> Tuple[str, HuggingFaceEndpoint]:
     """Function which returns preconstructed prompt template required by 
     mistralai/Mixtral-8x7B-Instruct-v0.1 LLM model and the LLM model itself.
-    
+
     Returns:
         str: Transcribed speech in text.
     """
@@ -49,9 +48,11 @@ def speech_to_text(audio_binary: bytes) -> str:
     Returns:
         str: Transcribed speech in text.
     """
-    default_model = "facebook/s2t-small-librispeech-asr"
 
-    stt_model = os.environ.get("HUGGINGFACE_STT_MODEL_NAME", default=default_model)
+    stt_model = os.environ.get(
+        "HUGGINGFACE_STT_MODEL_NAME",
+        default="distil-whisper/distil-large-v3"
+    )
 
     stt_temperature = float(
         os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", default=0.1)
@@ -62,61 +63,13 @@ def speech_to_text(audio_binary: bytes) -> str:
         stt_temperature = 0.1
 
     print(audio_binary)
-    print()
-    
-    # Convert audio sound bytes to numpy array
-    audio_binary_buffer = np.frombuffer(audio_binary, dtype='int16')
+
+    # Convert audio sound bytes to numpy array.
+    # Convert data from 16 bit wide integers to floating point with a width of 32 bits.
+    # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
+    audio_binary_buffer = np.frombuffer(audio_binary, dtype=np.int16).astype(np.float32) / 32768.0
+
     print(audio_binary_buffer)
-    if "openai/whisper" in stt_model.lower():
-        print(f"Using openai whisper model: {stt_model}")
-        try:    
-            model = WhisperForConditionalGeneration.from_pretrained(
-                pretrained_model_name_or_path=stt_model
-            )
-            processor = WhisperProcessor.from_pretrained(
-                pretrained_model_name_or_path=stt_model,
-                language="en",
-                task="transcribe"
-            )
-        except ValueError:
-            print("Invalid OpenAI model chosen. Default to openai/whisper-tiny.en model ")
-            stt_model = "openai/whisper-tiny.en"
-            model = WhisperForConditionalGeneration.from_pretrained(
-                pretrained_model_name_or_path=stt_model
-            )
-            processor = WhisperProcessor.from_pretrained(
-                pretrained_model_name_or_path=stt_model,
-                language="en",
-                task="transcribe"
-            )
-
-        # pre-process to get the input features
-        input_features = processor(
-            audio_binary_buffer,
-            sampling_rate=16000,
-            return_tensors="pt"
-        ).input_features
-        
-
-        # Generate token ids and decode them (returns a list). Configuration would be impactful for long form transcription
-        predicted_ids = model.generate(
-            input_features=input_features,
-            language="en",
-            task="transcribe",
-            do_sample=True,
-            temperature=stt_temperature
-        )
-
-        # post-process token ids to text
-        transcription = processor.batch_decode(
-            predicted_ids,
-            skip_special_tokens=True,
-        )
-
-        print("Transcribing...")
-        print(transcription)
-
-        return transcription[0]
     
     # Assume other models that is not from OpenAI
     model = AutoModelForSpeechSeq2Seq.from_pretrained(
@@ -124,25 +77,22 @@ def speech_to_text(audio_binary: bytes) -> str:
         low_cpu_mem_usage=True,
         use_safetensors=True
     )
-
+    model.to(DEVICE)
     processor = AutoProcessor.from_pretrained(
         pretrained_model_name_or_path=stt_model
     )
 
-    # Create huggingface pipeline that is loaded to suitable DEVICE.
+    # Create huggingface pipeline that is loaded to suitable DEVICE config.
     pipe = pipeline(
         task="automatic-speech-recognition",
         model=model,
         tokenizer=processor.tokenizer,
         feature_extractor=processor.feature_extractor,
         torch_dtype=TORCH_DTYPE,
-        max_new_tokens=int(
-            os.environ.get("HUGGINGFACE_STT_MODEL_MAX_TOKEN", default= "128")
-        ),
+        max_new_tokens=128,
+        chunk_length_s=30,
+        batch_size=16,
         device=DEVICE,
-        do_sample=True,
-        framework="pt",
-        temperature=stt_temperature
     )
     print("Transcribing...")
     result = pipe(audio_binary)
@@ -157,7 +107,10 @@ def text_to_speech(input_text: str) -> np.ndarray:
     Returns:
         np.ndarray: Speech values in numpy array.
     """
-    model_id = os.environ.get("HUGGINGFACE_TTS_MODEL_NAME", default="")
+    model_id = os.environ.get(
+        "HUGGINGFACE_TTS_MODEL_NAME",
+        default="suno/bark-small"
+    )
     if os.environ.get("TTS_API_CALL_ENABLED"):
         print("Using API calls for Text-to-speech synthesization\n")
         # Set the headers for our HTTP request
@@ -185,10 +138,10 @@ def text_to_speech(input_text: str) -> np.ndarray:
 
         return np.array(response.content)
 
-    print(f"Running offline inference with {model_id}")
+    print(f"Running inference with {model_id}")
     # Generate processor
     model, processor, vocoder = load_tts_components(tts_model_name=model_id)
-    # For Microsoft SpeechT5.# Default sampling rate: 16khz
+    # For Microsoft SpeechT5.# Default sampling rate: 16khz. Requires speaker embedding for speech pronunciation tones
     if vocoder:
         inputs = processor(text=input_text, return_tensors="pt")
         speaker_embeddings = get_speaker_embedding()
@@ -199,7 +152,7 @@ def text_to_speech(input_text: str) -> np.ndarray:
             threshold=0.5
         ).numpy()
 
-    # For BarkModel, which doesnt need vocoder to generate speech waves
+    # For other models, which doesnt need vocoder to generate speech waves
     else:
         inputs = processor(
             text=[input_text],
@@ -208,7 +161,6 @@ def text_to_speech(input_text: str) -> np.ndarray:
         # a mono 24 kHz speech
         speech_array = model.generate(
             **inputs,
-            do_sample=True
         ).numpy()
 
     speech_array = np.array(speech_array, dtype=np.float64)
@@ -227,46 +179,34 @@ def process_message(user_message: str) -> str:
     
     # Call the OpenAI Api to process our prompt
     is_openai_enabled = os.environ.get("OPENAPI_CHATMODEL_API_CALL_ENABLED", default="")
+
     prompt_str = "Act like a personal assistant. You can respond to questions, translate sentences, summarize news, and give recommendations at the end."
 
 
     if is_openai_enabled:
         print(f"Using OpenAI model for input: {user_message}")
-        # Prompt template required for mixtral model
-        template = """{prompt_str}
-
-        Question: {question}
-        Helpful Answer:
-        """
-        # Use ChatOpenAI
+        openai_model = os.environ.get("OPENAI_MODEL_NAME")
         try:
-            llm = ChatOpenAI(
-                model="gpt-3.5-turbo",
-                api_key=os.environ.get("OPENAI_API_KEY"),
-                max_retries=0
+            # Call the OpenAI Api to process our prompt
+            openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            openai_response = openai_client.chat.completions.create(
+                model=openai_model,
+                messages=[
+                    {"role": "system", "content": prompt_str},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=4000
             )
-        except (AuthenticationError, RateLimitError) as err:
-            print(f"Encountered Error {err}")
+            print("openai response:", openai_response)
+            # Parse the response to get the response message for our prompt
+            response_text = openai_response.choices[0].message.content
+            return response_text
+        except (AuthenticationError, RateLimitError, ValueError) as err:
+            print(f"Encountered {err}")
             template, llm = get_mistral_prompt_and_llm()
 
-        # # Call the OpenAI Api to process our prompt
-        # openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"),)
-        # openai_response = openai_client.chat.completions.create(
-        #     model="gpt-3.5-turbo",
-        #     messages=[
-        #         {"role": "system", "content": prompt},
-        #         {"role": "user", "content": user_message}
-        #     ],
-        #     max_tokens=4000
-        # )
-        # print("openai response:", openai_response)
-        # # Parse the response to get the response message for our prompt
-        # response_text = openai_response.choices[0].message.content
-        # return response_text
-
     # Use default
-    else:
-        template, llm = get_mistral_prompt_and_llm()
+    template, llm = get_mistral_prompt_and_llm()
 
     prompt = PromptTemplate(
         template=template,
