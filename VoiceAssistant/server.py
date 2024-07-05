@@ -24,9 +24,7 @@ def speech_to_text_route() -> str:
     Returns:
         str: Transcribed speech.
     """
-    print("Processing speech-to-text")
     audio_binary = request.data # Get the user's speech from their request
-    print("Request...")
     print(request)
     # Call speech_to_text function to transcribe the speech which returns a text string
     text = speech_to_text(audio_binary)
@@ -57,13 +55,12 @@ def process_message_route():
 
     print("Before encoding with base 64 and decode to utf8")
     print(openai_response_speech)
-    print(type(openai_response_speech))
 
     # Lossless commpression with base64 and decode to utf8
 
     print("Encoding with base64 and decode to utf8")
 
-    if np.any(openai_response_speech):
+    if openai_response_text != "undefined":
         print("Decoding text to speech")
         openai_response_speech = base64.b64encode(openai_response_speech).decode('utf-8')
         # Send a JSON response back to the user containing their message's response both in text and speech formats. JSON key is referenced by script.js
@@ -79,7 +76,7 @@ def process_message_route():
         # Send a JSON response back to the user containing their message's response both in text only with json.dumps that convert python objects
         response = app.response_class(
             response=json.dumps({
-                "ResponseText": "Error encountered in chatbot",
+                "ResponseText": openai_response_text,
             }),
             status=200,
             mimetype='application/json'

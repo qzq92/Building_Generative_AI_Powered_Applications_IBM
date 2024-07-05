@@ -55,6 +55,7 @@ const cleanTextInput = (value) => {
     .replace(/[<>&;]/g, ""); // sanitize inputs
 };
 
+// Your Recording
 const recordAudio = () => {
   return new Promise(async (resolve) => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -98,7 +99,6 @@ const toggleRecording = async () => {
   }
 };
 
-// https://stackoverflow.com/questions/17762763/play-wav-sound-file-encoded-in-base64-with-javascript
 const playResponseAudio = (function () {
   const df = document.createDocumentFragment();
   return function Sound(src) {
@@ -107,7 +107,7 @@ const playResponseAudio = (function () {
     snd.addEventListener("ended", function () {
       df.removeChild(snd);
     });
-    snd.play().catch(err=>console.log(err));
+    snd.play();
     return snd;
   };
 })();
