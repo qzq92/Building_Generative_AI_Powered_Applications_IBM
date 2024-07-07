@@ -208,7 +208,7 @@ TTS_API_CALL_ENABLED = ""
 **
 ```
 
-2. As this is a technical exploration/experimentation work, Audio transcription may be inaccurate or up to expectations. You may occassionally encounter the following error as a result of converting audio inputs to numerical values for transcription:
+2. As this is a technical exploration/experimentation work, Audio transcription may be inaccurate or up to expectations. You may randomy encounter the following error as a result of converting audio inputs to numerical values for transcription due to short speech or interference from surrounding:
 ```
 ValueError: buffer size must be a multiple of element size
 ```
@@ -242,7 +242,6 @@ ValueError: buffer size must be a multiple of element size
 
 
 ## Troubleshooting notes
-
 
 1. To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to see activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
 
