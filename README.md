@@ -147,18 +147,22 @@ Ensure that you have executed above command to get flask running. Then execute a
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are you today?"}' <Flask Server Host>:<Port>/chatbot
 ```
-## 3. Voice Assistant
+## 3. Transcription and Voice Assistant
 
 ### 3A. Simple transcription service with OpenAI model experimentation setup via Gradio Frontend (Credit is required for OpenAI model use.)
 
-You may can either upload your own mp3 file or use a sample mp3 file provided which are sourced from the following links:
+**Disclaimer and limitations**
+1. Credit is required for OpenAI transcription model use.
 
-1) **Archived LiveATC Recordings** [link](https://www.liveatc.net/recordings.php) - Expect poor performance due to background noise 
+2. Do expect transcription inaccuracies/cutoff as results are largely dependent on the quality and length of audio file provided.  
 
-2) **Ted Talks Daily Trailer** [link](https://audiocollective.ted.com/#shows-1) - Expect good performance due to clear audio, without background noise.
+You may can either upload your own mp3 file or use a sample mp3 file provided sourced from the following links:
 
+1. **Archived LiveATC Recordings** [link](https://www.liveatc.net/recordings.php) - Expect poor performance due to background noise 
 
-To run, execute the following command in the repository
+2. **Ted Talks Daily Trailer** [link](https://audiocollective.ted.com/#shows-1) - Expect good performance due to clear audio, without background noise.
+
+To run the service, execute the following command in the repository
 
 ```
 cd VoiceAssistant/experimentations
@@ -174,28 +178,11 @@ Sample audio transcription from file:
 Sample audio recording process:
 ![SampleAudioRecordingProcess](images/SampleGradioVoiceRecording.png)
 
-Disclaimer: Do expect transcription in accuracies as results are largely dependent on the quality and length of audio file provided.  
-
 ### 3B. Simple VoiceAssistant application
 
-**Disclaimer:**
+This is a UI powered VoiceAssistant application that enables you to chat with a Chatbot via text or audio inputs.
 
-1. HuggingFaceHub Model inference endpoint may not be available at times. As such, you may want to experiment with text to speech models offline by setting the environment variables as follows:
-```
-TTS_API_CALL_ENABLED = ""
-**
-```
-
-2. As this is a technical exploration/experimentation work, Audio transcription may be inaccurate or up to expectations. You may occassionally encounter the following error as a result of converting audio inputs to numerical values for transcription:
-```
-ValueError: buffer size must be a multiple of element size
-```
-
-3. The chatbot has no memory embedded, so it does not follow up or has any clue with previous conversation.
-
-TTS models supported: Microsoft's SpeechT5 and Suno/Bark model variants
-
-Run the following command to start the Flask service front end.
+Run the following command to start the Flask service front end directly from the repo root directory.
 
 ```
 python run VoiceAssistant/server.py
@@ -210,6 +197,29 @@ A working chat version with text input and generated output(with audio) is as sh
 
 A working chat version with transcribed input and generated output(with audio) is as shown below
 ![SampleVoice2VoiceAssistantService](images/SampleVoice2VoiceAssistantUI.png)
+
+Generated audio files are found in *bot_audio/* folder during execution of the repo.
+
+**Disclaimer and limitations**
+
+1. HuggingFaceHub Model inference endpoint may not be available at times. As such, you may want to experiment with text to speech models offline by setting the environment variables as follows:
+```
+TTS_API_CALL_ENABLED = ""
+**
+```
+
+2. As this is a technical exploration/experimentation work, Audio transcription may be inaccurate or up to expectations. You may occassionally encounter the following error as a result of converting audio inputs to numerical values for transcription:
+```
+ValueError: buffer size must be a multiple of element size
+```
+
+3. The chatbot has no memory embedded, so it does not follow up or has any clue with previous conversation(s).
+
+4. The following models are tested to work with codebase:
+    - STT model: distil-whisper/distil-large-v3
+    - Text generation: OpenAI Chat models and mistralai/Mixtral-8x7B-Instruct-v0.1 model
+    - TTS models: Microsoft's SpeechT5 and Suno/Bark model variants
+
 
 ## Programming languages/tools involved
 - Python
