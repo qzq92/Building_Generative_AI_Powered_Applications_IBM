@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 
 def transcribe_speech(filepath: str) -> str:
-    """Function which calls OpenAI's aduio transcriptions to transcribe a given filepath containing audio speech.
+    """Function which calls OpenAI's audio transcriptions to transcribe a given filepath containing audio speech.
 
     Args:
         filepath (str): File containing audio recordings.
