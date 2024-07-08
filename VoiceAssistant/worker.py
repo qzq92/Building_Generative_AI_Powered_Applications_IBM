@@ -53,14 +53,6 @@ def speech_to_text(audio_binary: bytes) -> str:
         default="distil-whisper/distil-large-v3"
     )
 
-    stt_temperature = float(
-        os.environ.get("HUGGINGFACE_STT_MODEL_TEMPERATURE", default=0.1)
-    )
-    # Correction mechanism
-    if stt_temperature <= 0:
-        print("Encountered non-positive temperature value, overriding to 0.1 instead.")
-        stt_temperature = 0.1
-
     print(audio_binary)
 
     # Convert audio sound bytes to numpy array.
