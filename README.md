@@ -49,9 +49,8 @@ CHATBOT_MODEL_MAX_LENGTH = "80"
 
 # For VoiceAssistant. Refer to STT models, https://huggingface.co/models?pipeline_tag=automatic-speech-recognition and TTS models page at https://huggingface.co/models?pipeline_tag=text-to-speech
 
-## For long form transcription, please use "distil-whisper/distil-large-v3". STT Config here. Model temperature must be non-negative float value.
+## For long form transcription, please use "distil-whisper/distil-large-v3". STT Config here.
 HUGGINGFACE_STT_MODEL_NAME = "distil-whisper/distil-large-v3"
-HUGGINGFACE_STT_MODEL_TEMPERATURE = "0.1"
 
 # Config for using openAPI Chatmodels. Indicate a string value to enable.
 OPENAPI_CHATMODEL_API_CALL_ENABLED = ""
@@ -147,38 +146,7 @@ Ensure that you have executed above command to get flask running. Then execute a
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are you today?"}' <Flask Server Host>:<Port>/chatbot
 ```
-## 3. Transcription and Voice Assistant
-
-### 3A. Simple transcription service with OpenAI model experimentation setup via Gradio Frontend (Credit is required for OpenAI model use.)
-
-**Disclaimer and limitations**
-1. Credit is required for OpenAI transcription model use.
-
-2. Do expect transcription inaccuracies/cutoff as results are largely dependent on the quality and length of audio file provided.  
-
-You may can either upload your own mp3 file or use a sample mp3 file provided sourced from the following links:
-
-1. **Archived LiveATC Recordings** [link](https://www.liveatc.net/recordings.php) - Expect poor performance due to background noise 
-
-2. **Ted Talks Daily Trailer** [link](https://audiocollective.ted.com/#shows-1) - Expect good performance due to clear audio, without background noise.
-
-To run the service, execute the following command in the repository
-
-```
-cd VoiceAssistant/experimentations
-python gradio_interface.py
-```
-
-Access the Gradio Interface via the host IP/Port specified and you should see a frontend like below:
-![SampleTranscriptionService](images/SampleGradioTranscriptionUI.png)
-
-Sample audio transcription from file:
-![SampleAudioTranscription](images/SampleAudioFileTranscription.png)
-
-Sample audio recording process:
-![SampleAudioRecordingProcess](images/SampleGradioVoiceRecording.png)
-
-### 3B. Simple VoiceAssistant application
+## 3. Simple VoiceAssistant application
 
 This is a UI powered VoiceAssistant application that enables you to chat with a Chatbot via text or audio inputs.
 
@@ -220,6 +188,37 @@ ValueError: buffer size must be a multiple of element size
     - Text generation: OpenAI Chat models and mistralai/Mixtral-8x7B-Instruct-v0.1 model
     - TTS models: Microsoft's SpeechT5 and Suno/Bark model variants
 
+### 4. Speech Transcription Summarizer
+
+This is a simple Gradio UI Powered Speech Transcription tool that serves to summarise a an uploaded meeting speech file which is to be transcribed powered by LLM models involving "distil-whisper/distil-large-v3 model" for transcription and Meta's "meta-llama/Llama-2-7b-chat-hf" LLM model for summarsing transcribed speech.
+
+
+A sample IBM meeting speech audio file is provided under the folder *sample_mp3_files* folder.
+
+To run, please execute the following command
+```
+python Speech_Summarizer/speech_analyzer_with_gradio.py
+```
+
+You should see a UI as shown below. To test out, please upload the provided audio file.
+
+![SampleTranscriptionandSummaryUI](images/SampleTranscriptionandSummaryUI.png)
+
+Sample audio file transcription from file:
+![SampleWorkingTranscriptionandSummary](images/SampleWorkingTranscriptionandSummary.png)
+
+
+**Disclaimer and limitations**
+
+1. Do expect transcription inaccuracies/cutoff as results are largely dependent on the quality and length of audio file provided.  
+
+You may can either upload your own mp3 file or use a sample mp3 file provided sourced from the following links:
+
+    - **Ted Talks Daily Trailer** [link](https://audiocollective.ted.com/#shows-1) - 
+
+    - **IBM Sample Voice mp3 file** [link](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMSkillsNetwork-GPXX04C6EN/Testing%20speech%20to%20text.mp3)
+
+2. There is no async/await implementation for the process, so outputs would take sometime to generate.
 
 ## Programming languages/tools involved
 - Python
@@ -232,7 +231,7 @@ ValueError: buffer size must be a multiple of element size
 - HuggingFace
     - Transformer models: 
         - Text-to-speech: *Suno/Bark*, *Microsoft SpeechT5*
-        - Text generation: OpenAI GPT-3.5 and GPT-4.0 Chat models, *mistralai/Mixtral-8x7B-Instruct-v0.1*
+        - Text generation: OpenAI GPT-3.5 and GPT-4.0 Chat models, *mistralai/Mixtral-8x7B-Instruct-v0.1*, *meta-llama/Llama-2-7b-chat-hf*
         - Speech-to-text: *distil-whisper/distil-large-v3*
         - Image Captioning: *Salesforce/blip-image-captioning-large*
     - HuggingFace pipeline,
@@ -241,9 +240,15 @@ ValueError: buffer size must be a multiple of element size
         - 14 images took 254 seconds
 
 
-## Troubleshooting notes
+## Troubleshooting notes/ Gradio errors that does not affect functionality
 
 1. To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to see activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+
+
+2. Gradio reporting *RuntimeError: Response content longer than Content-Length* when performing file upload through Gradio Interface in IDE. This does not affect the necessary transcription and summarisation flow of "4.Speech Transcription Summarizer."
+
+3. Gradio reporting *PermissionError: [Errno 13] Permission denied: < Temp file directory > when performing file upload through Gradio Interface in IDE. This does not affect the necessary transcription and summarisation flow of "4.Speech Transcription Summarizer." This can be resolved by executing with admin rights.
+
 
 ## Acknowledgement and Credits
 
@@ -251,11 +256,14 @@ The codebase for the simple apps developed are referenced from *"Building Genera
 
 Additional acknowledgement for different sections:
 
-Chatbot module webpage template: [IBM's LLM Application Chatbot Github Repository](https://github.com/ibm-developer-skills-network/LLM_application_chatbot)
+- Chatbot module:
+    - Webpage template: [IBM's LLM Application Chatbot Github Repository](https://github.com/ibm-developer-skills-network/LLM_application_chatbot)
 
-Voice assistant webpage template: [Arora-R](https://github.com/arora-r/chatapp-with-voice-and-openai-outline)
+- Voice assistant module:
+    - Webpage template: [Arora-R](https://github.com/arora-r/chatapp-with-voice-and-openai-outline)
 
-Transcription processing for input speech audio as part of speech-to-text function in VoiceAssistant [Transcribe demo](https://github.com/davabase/whisper_real_time/blob/master/transcribe_demo.py)
+    - Transcription processing for input speech audio as part of speech-to-text function in VoiceAssistant [Transcribe demo](https://github.com/davabase/whisper_real_time/blob/master/transcribe_demo.py)
 
-OpenAI Speech to text: [Speech to text](File uploads are currently limited to 25 MB and the following input file types are supported: mp3, mp4, mpeg, mpga, m4a, wav, and webm)
+- Speech Summarizer:
+    - Llama2 prompt structure discussion: [PromptTemplateStructure](https://discuss.huggingface.co/t/trying-to-understand-system-prompts-with-llama-2-and-transformers-interface/59016/8)
 
