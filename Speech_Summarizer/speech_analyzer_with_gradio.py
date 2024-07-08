@@ -8,7 +8,6 @@ import os
 import torch
 import gradio as gr
 
-
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 FILE_SIZE_LIMIT_MB = 25
@@ -22,10 +21,11 @@ def prepare_llama_prompt_and_llm() -> Tuple[PromptTemplate, AutoModelForCausalLM
 
     # Define template with input variables
     template = """
-    <s><<SYS>>
-    List the key points with details from the context: 
-    [INST] The context : {context} [/INST] 
-    <</SYS>>
+    <s>[INST] 
+    List 3 key points with details from the context below separated by new line without any indentation: 
+    
+    Context: {context}
+    [/INST] 
     """
 
     prompt = PromptTemplate(
@@ -51,6 +51,7 @@ def prepare_llama_prompt_and_llm() -> Tuple[PromptTemplate, AutoModelForCausalLM
     )
     # Tokenizer for same model
     tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer.use_default_system_prompt = False
 
     # Task pipeline
     hf_pipeline = pipeline(
@@ -59,14 +60,17 @@ def prepare_llama_prompt_and_llm() -> Tuple[PromptTemplate, AutoModelForCausalLM
         tokenizer=tokenizer,
         torch_dtype=TORCH_DTYPE,
         device_map="auto",
-        max_length=200,
+        max_length=512,
+        truncation=True,
         do_sample=True,
-        eos_token_id=tokenizer.eos_token_id
+        return_full_text=False
     )
 
     llm = HuggingFacePipeline(
         pipeline= hf_pipeline,
-        model_kwargs = {'temperature': 0})
+        model_kwargs = {
+            "temperature": 0,
+        })
     
     return prompt, llm
 
@@ -117,7 +121,7 @@ def generate_transcript_and_summary(audio_data: bytes) -> Tuple[str,str]:
         audio_filepath (str): Filepath to provided audio file.
 
     Returns:
-        Tuple[str,str]: Tuple containing summarised audio content based on llama model guided by prompts and the transcribed audio
+        Tuple[str,str]: Tuple containing summarised audio content based on llama model guided by prompts and the transcribed audio.
     """
     file_size_mb = os.stat(audio_data).st_size / (1024 * 1024)
     if file_size_mb > FILE_SIZE_LIMIT_MB:
@@ -126,12 +130,13 @@ def generate_transcript_and_summary(audio_data: bytes) -> Tuple[str,str]:
             f"File size exceeds file size limit. Got file of size {file_size_mb:.2f}MB for a limit of {FILE_SIZE_LIMIT_MB}MB."
         )
     transcription = transcribe_audio_with_distill_stt(audio_binary=audio_data)
-
+    
+    print()
     print("Generated transcription")
     print(transcription)
 
     # Get prompt and llm objects
-    prompt, llm, = prepare_llama_prompt_and_llm()
+    prompt, llm = prepare_llama_prompt_and_llm()
 
     # Generate summary
     llm_chain = prompt | llm
@@ -140,7 +145,7 @@ def generate_transcript_and_summary(audio_data: bytes) -> Tuple[str,str]:
     print("Generated summary:")
     print(summary)
 
-    return summary, transcription
+    return transcription, summary
 
 
 def start_gradio_interface(host:str, port:int):
@@ -156,6 +161,34 @@ def start_gradio_interface(host:str, port:int):
     )
 
     microphone_interface_title = "Click on 'Record' to start recording your speech for transcription."
+
+    # For microphone transcription and summary
+    mic_transcription_textbox = gr.Textbox(
+        max_lines=5,
+        placeholder="",
+        show_copy_button=True,
+        label="Microphone audio transcription",
+        show_label=True,
+        type="text"
+    )
+
+    mic_summary_textbox = gr.Textbox(
+        max_lines=5,
+        placeholder="",
+        show_copy_button=True,
+        label="Transcription summary of microphone input",
+        show_label=True,
+        type="text"
+    )
+
+    # Interface for microphone transcription. Ensure that your browser has access to microphone on the device hosting gradio
+    mic_transcribe = gr.Interface(
+        fn = generate_transcript_and_summary,
+        title = microphone_interface_title,
+        inputs = gr.Audio(sources="microphone", type="filepath"),
+        outputs = [mic_transcription_textbox, mic_summary_textbox],
+        allow_flagging="never"
+    )
 
     # For Audiofile transcription and summary
     audiofile_transcription_textbox = gr.Textbox(
@@ -177,35 +210,7 @@ def start_gradio_interface(host:str, port:int):
     )
 
 
-    # Interface for microphone transcription. Ensure that your browser has access to microphone on the device hosting gradio
-    mic_transcribe = gr.Interface(
-        fn = generate_transcript_and_summary,
-        title = microphone_interface_title,
-        inputs = gr.Audio(sources="microphone", type="filepath"),
-        outputs = [mic_transcription_textbox, mic_summary_textbox],
-        allow_flagging="never"
-    )
-
     file_upload_interface_title = "Upload your audio files here (currently limited to 25 MB)"
-
-    # For microphone transcription and summary
-    mic_transcription_textbox = gr.Textbox(
-        max_lines=5,
-        placeholder="",
-        show_copy_button=True,
-        label="Microphone audio transcription",
-        show_label=True,
-        type="text"
-    )
-
-    mic_summary_textbox = gr.Textbox(
-        max_lines=5,
-        placeholder="",
-        show_copy_button=True,
-        label="Transcription summary of microphone input",
-        show_label=True,
-        type="text"
-    )
 
     # Interface for file upload
     file_transcribe = gr.Interface(
