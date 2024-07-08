@@ -114,7 +114,9 @@ if __name__ == "__main__":
     MAX_THREADS = min(os.cpu_count() - 2, len(filtered_img_url_list))
     
     # Generate captions for each image url and save it into a text file in a defined filepath.
-    parent_dir = os.environ.get("PYTHONPATH", default=os.getcwd())
+    parent_dir = os.environ.get(
+        os.path.dirname(os.path.abspath(__file__)), default=os.getcwd()
+    )
 
     caption_filepath = os.path.join(parent_dir,"generated_captions.txt")
     
