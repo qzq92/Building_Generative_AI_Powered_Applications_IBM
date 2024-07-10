@@ -71,6 +71,7 @@ const populateUserMessage = (userMessage, userRecording) => {
   scrollToBottom();
 };
 
+// control for firstmessage to display
 let isFirstMessage = true;
 
 const populateBotResponse = async (userMessage) => {
@@ -79,6 +80,7 @@ const populateBotResponse = async (userMessage) => {
   let response;
   let uploadButtonHtml = '';
 
+  // Instantiate first message to prompt upload
   if (isFirstMessage) {
     response = { botResponse: "Hello there! I'm your friendly data assistant, ready to answer any questions regarding your data. Could you please upload a PDF file for me to analyze?"};
     uploadButtonHtml = `
