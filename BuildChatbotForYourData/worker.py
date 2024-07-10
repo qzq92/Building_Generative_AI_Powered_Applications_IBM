@@ -36,7 +36,7 @@ def init_llm() -> HuggingFaceEndpoint:
     llm = HuggingFaceEndpoint(
         huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
         repo_id=model_id,
-        temperature=0.1,
+        temperature=0.01,
         max_new_tokens=600,
     )
     return llm
@@ -83,14 +83,18 @@ def process_document(document_path:str) -> None:
 
     # Use predefined chat prompt template for retrieval qa
 
-    custom_template = """Use the following pieces of context and also chat history to answer the question at the end. If you don't know the answer, just say I do not know and do not attempt to make up an answer. The answer should be a summary, limited to two sentences.
+    custom_template = """You are a friendly and helpful AI Assistant who attempts to answer any query. Use the following pieces of context and chat history to answer the question at the end. The answer should be at most a three sentence summary. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
-    Context: {context}
+    {context}
     
-    Chat History: {chat_history}
+    Chat History:
+    {chat_history}
     
-    Question: {question}
+    Question:
+    {question}
+
     Answer:"""
+
     # Define prompt template for use as chain
     custom_prompt_template = PromptTemplate(
         input_variables=["context", "question", "chat_history"],
