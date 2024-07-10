@@ -143,7 +143,7 @@ cd Chatbot/
 flask run -h <host Name/IP> -p <port>
 ```
 
-You should see a sample chatbot interface below:
+Open up a browser and access the url which the chatbot is running on based on your flask config settings in .env. You should see a sample chatbot interface as follows:
 ![SampleChatbotUI](images/SampleChatbotUI.png)
 
 A demonstration example of how conversation would be as follows:
@@ -211,7 +211,7 @@ To run, please execute the following command
 python Speech_Summarizer/speech_analyzer_with_gradio.py
 ```
 
-You should see a UI as shown below. To test out, please upload the provided audio file.
+Open up a browser and access the url which the Gradio service is running on and you should see a UI as shown below. To test out, please upload the provided audio file.
 
 ![SampleTranscriptionandSummaryUI](images/SampleTranscriptionandSummaryUI.png)
 
@@ -243,13 +243,27 @@ DOCUMENT_CHUNK_OVERLAP = "64"
 Note: The max length/token for the LLM is hardcoded in worker.py, set at 600 at the moment.
 
 To run, please execute the following command
+
 ```
 python BuildChatbotForYourData/server.py
 ```
 
+Access the Flask Interface via the host IP/Port specified and you should see a frontend as follows:
+
+![SamplePersonalPDFDataAssistantUI](images/SamplePersonalPDFDataAssistantStartup.png)
+
+A working version looks like this:
+![SamplePersonalPDFDataAssistantWorking](images/SamplePersonalPDFDataAssistant.png)
 
 When the app is up, you may upload your own pdf to try or test it out with the provided sample pdf file found under *BuildChatbotForYourData/sample_pdf* folder.
 
+**Disclaimer and limitations**
+
+1. Do expect performance degradation in terms of response as the chat gets longer and longer due to use of local machine memory.
+
+2. It would be best to upload small pdf files for experimentation as this app is run locally and large files require longer time to be chunked into vectorstore to enable RAG to work properly. Browser limitation may also result in failure of large file upload.
+
+3. Prompt used for the chatbot may not be optimal and are tailored to limit output to short summary/sentences, hence do not expect lengthy responses. 
 
 ## Programming languages/tools involved
 - Python
@@ -278,17 +292,24 @@ When the app is up, you may upload your own pdf to try or test it out with the p
 
 1. To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to see activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
 
-
 2. Gradio reporting *RuntimeError: Response content longer than Content-Length* when performing file upload through Gradio Interface in IDE. This does not affect the necessary transcription and summarisation flow of "4.Speech Transcription Summarizer."
 
 3. Gradio reporting *PermissionError: [Errno 13] Permission denied: < Temp file directory > when performing file upload through Gradio Interface in IDE. This does not affect the necessary transcription and summarisation flow of "4.Speech Transcription Summarizer." This can be resolved by executing with admin rights.
 
+4. Use of HuggingFaceInstructEmbeddings results in *TypeError: INSTRUCTOR._load_sbert_model() got an unexpected keyword argument 'token'* caused by  *sentence-transformers*>2.2.2 dependency. To workaround, HuggingFaceEmbeeding library was used instead
+
+```
+pip install git+https://github.com/SilasMarvin/instructor-embedding.git@silas-update-for-newer-sentence-transformers
+
+```
 
 ## Acknowledgement and Credits
 
 The codebase for the simple apps developed are referenced from *"Building Generative AI-Powered Applications with Python"* by IBM available at https://www.coursera.org/learn/building-gen-ai-powered-applications.
 
 Additional acknowledgement for different sections:
+
+- General reference on langchain QA[QuestionAnsweringApproaches](https://towardsdatascience.com/4-ways-of-question-answering-in-langchain-188c6707cc5a)
 
 - Chatbot module:
     - Webpage template: [IBM's LLM Application Chatbot Github Repository](https://github.com/ibm-developer-skills-network/LLM_application_chatbot)
@@ -309,3 +330,5 @@ Additional acknowledgement for different sections:
     - Frontend template: [BuildChatbotForYourData](https://github.com/sinanazeri/build_own_chatbot_without_open_ai.git)
 
     - Sample pdf file: [Sample pdf](https://abc.xyz/assets/d9/85/b7649a9f48c4960adbce5bd9fb54/20220202-alphabet-10k.pdf)
+
+    - GitHub issue/ workaround solution for "Troubleshooting notes/ Gradio errors that does not affect functionality" section: [GitHub Issue](https://github.com/UKPLab/sentence-transformers/issues/2567)
