@@ -260,10 +260,12 @@ Additional acknowledgement for different sections:
     - Webpage template: [IBM's LLM Application Chatbot Github Repository](https://github.com/ibm-developer-skills-network/LLM_application_chatbot)
 
 - Voice assistant module:
-    - Webpage template: [Arora-R](https://github.com/arora-r/chatapp-with-voice-and-openai-outline)
+    - Frontend template: [Arora-R](https://github.com/arora-r/chatapp-with-voice-and-openai-outline)
 
     - Transcription processing for input speech audio as part of speech-to-text function in VoiceAssistant [Transcribe demo](https://github.com/davabase/whisper_real_time/blob/master/transcribe_demo.py)
 
 - Speech Summarizer:
     - Llama2 prompt structure discussion: [PromptTemplateStructure](https://discuss.huggingface.co/t/trying-to-understand-system-prompts-with-llama-2-and-transformers-interface/59016/8)
 
+- Build Chatbot For your data module
+    - Frontend template: [BuildChatbotForYourData](https://github.com/sinanazeri/build_own_chatbot_without_open_ai.git)
