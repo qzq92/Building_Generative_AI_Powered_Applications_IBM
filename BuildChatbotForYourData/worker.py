@@ -1,17 +1,17 @@
 import os
 import torch
-from langchain.chains.retrieval_qa.base import RetrievalQA
-from langchain_community.embeddings import HuggingFaceInstructEmbeddings
+from langchain.chains.conversational_retrieval.base import ConversationalRetrievalChain
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEndpoint
-from langchain import hub
+from langchain.prompts import PromptTemplate
 
 # Check for GPU availability and set the appropriate device for computation.
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-# Global variables
+# Global variables to be updated
 conversation_retrieval_chain = None
 chat_history = []
 
@@ -30,12 +30,9 @@ def init_llm() -> HuggingFaceEndpoint:
     llm = HuggingFaceEndpoint(
         huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
         repo_id=model_id,
-        model_kwargs={
-            "temperature": 0.1,
-            "max_new_tokens": 600,
-            "max_length": 600}
-        )
-
+        temperature=0.1,
+        max_new_tokens=600,
+    )
     return llm
 
 # Function to process a PDF document
@@ -66,9 +63,10 @@ def process_document(document_path:str) -> None:
     texts = text_splitter.split_documents(documents)
 
     # Initialize embeddings using a pre-trained model to represent the text data.
-    embeddings = HuggingFaceInstructEmbeddings(
+    embeddings =  HuggingFaceEmbeddings(
         model_name=os.environ.get(
-            "HUGGINGFACE_DOCUMENT_EMBEDDINGS_MODEL", default="sentence-transformers/all-MiniLM-L6-v2"
+            "HUGGINGFACE_DOCUMENT_EMBEDDINGS_MODEL", 
+            default="tiiuae/falcon-7b-instruct",
         ),
         model_kwargs={"device": DEVICE},
         encode_kwargs = {'normalize_embeddings': False}
@@ -77,25 +75,34 @@ def process_document(document_path:str) -> None:
     # Create an embeddings database using Chroma from the split text chunks.
     db = Chroma.from_documents(texts, embedding=embeddings)
 
-    # Use predefined chat prompt for retrieval qa
-    retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
+    # Use predefined chat prompt template for retrieval qa
 
-    # Retrieve more documents with higher diversity
-    # Useful if your dataset has many similar documents
-    conversation_retrieval_chain = RetrievalQA.from_chain_type(
+    custom_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say I do not know and do not attempt to make up an answer. The answer should be as concise as possible, limited to three sentences at maximum.
+    
+    {context}
+
+    Question: {question}
+
+    Helpful Answer:"""
+    # Define prompt template for use as chain
+    custom_prompt_template = PromptTemplate.from_template(template=custom_template)
+
+
+    # Instantiate ConversationalRetrievalChain that allows chat history to be 
+    conversation_retrieval_chain = ConversationalRetrievalChain.from_llm(
         llm=llm_model,
-        chain_type="stuff",
+        chain_type="stuff", # inserts docs all into a prompt,
         retriever=db.as_retriever(
             search_type="mmr", # maximum marginal relevance (MMR)
             search_kwargs={
                 'k': 6, # Limit to 6 Search result
                 'lambda_mult': 0.25}
             ),
-        return_source_documents=False, # Dont indicate source document as part of return
-        input_key = "question",
-        chain_type_kwargs={
-            "prompt": retrieval_qa_chat_prompt
-        }
+        return_source_documents=True, # To validate source of info
+        combine_docs_chain_kwargs={
+            "prompt": custom_prompt_template
+        },
+        verbose=True
     )
 
 # Function to process a user prompt
@@ -112,9 +119,15 @@ def process_prompt(prompt:str) -> str:
     global conversation_retrieval_chain
     global chat_history
 
-    # Query the model
-    output = conversation_retrieval_chain({"question": prompt, "chat_history": chat_history})
-    answer = output["result"]
+    # Chain input must fill chat prompt template variables. Based on langchain-ai/retrieval-qa-chat, we need to provide input and chat_history when using the chain.
+    output_dict = conversation_retrieval_chain(
+        {
+            "question": prompt,
+            "chat_history": chat_history
+        }
+    )
+    print(output_dict)
+    answer = output_dict["answer"]
     
     # Update the chat history with prompt (user) and bot answer
     chat_history.append((prompt, answer))
