@@ -132,7 +132,6 @@ def process_prompt(prompt:str) -> str:
     output_dict = conversation_retrieval_chain(
         {
             "question": prompt,
-            "chat_history": chat_history
         }
     )
     print(output_dict)
