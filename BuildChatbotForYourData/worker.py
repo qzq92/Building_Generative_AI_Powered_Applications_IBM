@@ -83,7 +83,7 @@ def process_document(document_path:str) -> None:
 
     # Use predefined chat prompt template for retrieval qa
 
-    custom_template = """Use the following pieces of context and also chat history to answer the question at the end. If you don't know the answer, just say I do not know and do not attempt to make up an answer. The answer should be as concise as possible, limited to maximum two sentences.
+    custom_template = """Use the following pieces of context and also chat history to answer the question at the end. If you don't know the answer, just say I do not know and do not attempt to make up an answer. The answer should be a summary, limited to two sentences.
 
     Context: {context}
     
