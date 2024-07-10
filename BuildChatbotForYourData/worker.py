@@ -7,13 +7,19 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferMemory
 
 # Check for GPU availability and set the appropriate device for computation.
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # Global variables to be updated
 conversation_retrieval_chain = None
-chat_history = []
+chat_history = ConversationBufferMemory(
+            memory_key="chat_history",
+            input_key="question",
+            output_key='answer',
+            return_messages=True
+        )
 
 def init_llm() -> HuggingFaceEndpoint:
     """Function which returns llm model via HuggingFaceEndpoint (API call)
@@ -77,15 +83,19 @@ def process_document(document_path:str) -> None:
 
     # Use predefined chat prompt template for retrieval qa
 
-    custom_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say I do not know and do not attempt to make up an answer. The answer should be as concise as possible, limited to three sentences at maximum.
+    custom_template = """Use the following pieces of context and also chat history to answer the question at the end. If you don't know the answer, just say I do not know and do not attempt to make up an answer. The answer should be as concise as possible, limited to maximum two sentences.
+
+    Context: {context}
     
-    {context}
-
+    Chat History: {chat_history}
+    
     Question: {question}
-
-    Helpful Answer:"""
+    Answer:"""
     # Define prompt template for use as chain
-    custom_prompt_template = PromptTemplate.from_template(template=custom_template)
+    custom_prompt_template = PromptTemplate(
+        input_variables=["context", "question", "chat_history"],
+        template=custom_template
+    )
 
 
     # Instantiate ConversationalRetrievalChain that allows chat history to be 
@@ -95,14 +105,13 @@ def process_document(document_path:str) -> None:
         retriever=db.as_retriever(
             search_type="mmr", # maximum marginal relevance (MMR)
             search_kwargs={
-                'k': 6, # Limit to 6 Search result
-                'lambda_mult': 0.25}
-            ),
+                'k': 3, # Limit to search result
+            }
+        ),
         return_source_documents=True, # To validate source of info
-        combine_docs_chain_kwargs={
-            "prompt": custom_prompt_template
-        },
-        verbose=True
+        combine_docs_chain_kwargs={'prompt': custom_prompt_template},
+        verbose=True,
+        memory=chat_history
     )
 
 # Function to process a user prompt
@@ -128,9 +137,6 @@ def process_prompt(prompt:str) -> str:
     )
     print(output_dict)
     answer = output_dict["answer"]
-    
-    # Update the chat history with prompt (user) and bot answer
-    chat_history.append((prompt, answer))
     
     # Return the model's response
     return answer
