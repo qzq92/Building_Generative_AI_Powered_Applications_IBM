@@ -1,10 +1,10 @@
 import os
 import torch
 from langchain.chains.retrieval_qa.base import RetrievalQA
-from langchain.embeddings import HuggingFaceInstructEmbeddings
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.embeddings import HuggingFaceInstructEmbeddings
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain import hub
 
@@ -26,21 +26,21 @@ def init_llm() -> HuggingFaceEndpoint:
         "HUGGINGFACE_QA_LLM_MODEL", 
         default="tiiuae/falcon-7b-instruct"
     )
-    # load the model into the HuggingFaceHub
+    # load the model into the HuggingFaceHub, set token limit
     llm = HuggingFaceEndpoint(
         huggingfacehub_api_token=os.environ.get("HUGGINGFACEHUB_API_TOKEN"),
         repo_id=model_id,
         model_kwargs={
             "temperature": 0.1,
-             "max_new_tokens": 600,
-             "max_length": 600}
+            "max_new_tokens": 600,
+            "max_length": 600}
         )
 
     return llm
 
 # Function to process a PDF document
 def process_document(document_path:str) -> None:
-    """Function which loads and chunks the pdf for storage into Chroma vector store. A seperates RetrievalQA chain is constructed upon completion.
+    """Function which loads and chunks the pdf for storage into Chroma vector store. A seperates RetrievalQA chain is constructed upon completion without any return.
 
     Args:
         document_path (str): Path to pdf document to be processed.
@@ -54,7 +54,7 @@ def process_document(document_path:str) -> None:
     loader = PyPDFLoader(document_path)
     documents = loader.load()
     
-    # Split the document into chunks using RecursiveCharacterTextSplitter class
+    # Split the document into chunks using RecursiveCharacterTextSplitter class by instantiating and calling split_documents.
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=int(
             os.environ.get("DOCUMENT_CHUNK_SIZE", default="1024")
@@ -65,8 +65,7 @@ def process_document(document_path:str) -> None:
     )
     texts = text_splitter.split_documents(documents)
 
-    
-    #Initialize embeddings using a pre-trained model to represent the text data.
+    # Initialize embeddings using a pre-trained model to represent the text data.
     embeddings = HuggingFaceInstructEmbeddings(
         model_name=os.environ.get(
             "HUGGINGFACE_DOCUMENT_EMBEDDINGS_MODEL", default="sentence-transformers/all-MiniLM-L6-v2"
@@ -99,13 +98,17 @@ def process_document(document_path:str) -> None:
         }
     )
 
-
 # Function to process a user prompt
 def process_prompt(prompt:str) -> str:
-    """Function which processes input prompt as question using conversation retrieval chain and generates a bot response as output taking into account chat history information if available
+    """Function which processes input prompt as question using conversation retrieval chain and generates a bot response as output taking into account chat history information if available.
+
+    Args:
+        document_path (str): Path to pdf document to be processed.
+
+    Returns:
+       HuggingFaceEndpoint: HuggingFaceEndpoint API reference
     """
 
-    #
     global conversation_retrieval_chain
     global chat_history
 
