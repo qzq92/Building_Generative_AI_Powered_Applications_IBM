@@ -28,6 +28,7 @@ HUGGINGFACEHUB_API_TOKEN = <Your API KEY>
 PYTHONPATH="C:\Users\quekz\OneDrive\Desktop\Building_Generative_AI_Powered_Applications_IBM"
 PYTHONDONTWRITEBYTECODE="1"
 
+# -----------------------------------------------------------------------
 # For Image Captioning
 BLIP_MODEL_NAME = "Salesforce/blip-image-captioning-large"
 # For imagecaptioning.py use
@@ -40,6 +41,7 @@ MIN_RES_PIXELS = "400"
 # max token for caption
 MODEL_CAPTION_MAX_TOKEN = "300"
 
+# -----------------------------------------------------------------------
 # For Chatbot. Please select a relevant HuggingFace model that can fit and run on your computer.
 CHATBOT_MODEL_NAME = "facebook/blenderbot-400M-distill"
  # Anything above 0 but less than 1. A float value
@@ -47,6 +49,7 @@ CHATBOT_MODEL_TEMPERATURE = "0.8"
 # Chatbot max length generation. Must be positive integer.
 CHATBOT_MODEL_MAX_LENGTH = "80"
 
+# -----------------------------------------------------------------------
 # For VoiceAssistant. Refer to STT models, https://huggingface.co/models?pipeline_tag=automatic-speech-recognition and TTS models page at https://huggingface.co/models?pipeline_tag=text-to-speech
 
 ## For long form transcription, please use "distil-whisper/distil-large-v3". STT Config here.
@@ -61,6 +64,14 @@ HUGGINGFACE_TTS_MODEL_TEMPERATURE = "0.0"
 
 # Config for using HuggingFace TTS API calls. Indicate a string value to enable.call.
 TTS_API_CALL_ENABLED = ""
+
+
+# -----------------------------------------------------------------------
+# For Buildchatbotforyourdata to perform Question-Answering on your document based on RAG approach
+HUGGINGFACE_QA_LLM_MODEL = "tiiuae/falcon-7b-instruct"
+HUGGINGFACE_DOCUMENT_EMBEDDINGS_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DOCUMENT_CHUNK_SIZE = "1024"
+DOCUMENT_CHUNK_OVERLAP = "64"
 
 # Gradio Config for GRADIO_SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. GRADIO_SERVER_PORT DEFAULTS to 7860 if empty.
 GRADIO_SERVER_NAME = "127.0.0.1"
@@ -212,13 +223,33 @@ Sample audio file transcription from file:
 
 1. Do expect transcription inaccuracies/cutoff as results are largely dependent on the quality and length of audio file provided.  
 
-You may can either upload your own mp3 file or use a sample mp3 file provided sourced from the following links:
+You may can either upload your own mp3 file or use a sample mp3 file provided under *Speech_Summarizer/sample_mp3_files* folder.
 
-    - **Ted Talks Daily Trailer** [link](https://audiocollective.ted.com/#shows-1) - 
+2. There is no async/await implementation for the implementation, so outputs would take sometime to generate.
 
-    - **IBM Sample Voice mp3 file** [link](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMSkillsNetwork-GPXX04C6EN/Testing%20speech%20to%20text.mp3)
+### 5. Chatbot for your data
 
-2. There is no async/await implementation for the process, so outputs would take sometime to generate.
+This is a simple chatbot app built using Flask, a popular web framework, and the Langchain, another popular framework for working wtih Large Language Models (LLMs). The chatbot interacts with users via text but also comprehend and answer questions related to the content of a specific pdf document with the help of Retrieval Augmented Generation (RAG).
+
+Please ensure the following variables in .env are filled. Note that *DOCUMENT_CHUNK_SIZE* and *DOCUMENT_CHUNK_SIZE* should be in string format. The size and overlap would impact the amount of time required to embed the pdf document provided.Example as follows:
+
+```
+HUGGINGFACE_QA_LLM_MODEL = "tiiuae/falcon-7b-instruct"
+HUGGINGFACE_DOCUMENT_EMBEDDINGS_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DOCUMENT_CHUNK_SIZE = "1024"
+DOCUMENT_CHUNK_OVERLAP = "64"
+```
+
+Note: The max length/token for the LLM is hardcoded in worker.py, set at 600 at the moment.
+
+To run, please execute the following command
+```
+python BuildChatbotForYourData/server.py
+```
+
+
+When the app is up, you may upload your own pdf to try or test it out with the provided sample pdf file found under *BuildChatbotForYourData/sample_pdf* folder.
+
 
 ## Programming languages/tools involved
 - Python
@@ -231,13 +262,16 @@ You may can either upload your own mp3 file or use a sample mp3 file provided so
 - HuggingFace
     - Transformer models: 
         - Text-to-speech: *Suno/Bark*, *Microsoft SpeechT5*
-        - Text generation: OpenAI GPT-3.5 and GPT-4.0 Chat models, *mistralai/Mixtral-8x7B-Instruct-v0.1*, *meta-llama/Llama-2-7b-chat-hf*
+        - Text generation: OpenAI GPT-3.5 and GPT-4.0 Chat models, *mistralai/Mixtral-8x7B-Instruct-v0.1*, *meta-llama/Llama-2-7b-chat-hf*, *tiiuae/falcon-7b-instruct*
         - Speech-to-text: *distil-whisper/distil-large-v3*
         - Image Captioning: *Salesforce/blip-image-captioning-large*
+        - Document Embedding: *sentence-transformers/all-MiniLM-L6-v2*
     - HuggingFace pipeline,
 - Concurrence library
     - Multiprocessing with 10 threads for image captioning
         - 14 images took 254 seconds
+
+[Leaderboard of Document Embedding Models](https://huggingface.co/spaces/mteb/leaderboard)
 
 
 ## Troubleshooting notes/ Gradio errors that does not affect functionality
@@ -266,6 +300,12 @@ Additional acknowledgement for different sections:
 
 - Speech Summarizer:
     - Llama2 prompt structure discussion: [PromptTemplateStructure](https://discuss.huggingface.co/t/trying-to-understand-system-prompts-with-llama-2-and-transformers-interface/59016/8)
+    
+    - *Ted Talks Daily Trailer* [link](https://audiocollective.ted.com/#shows-1) - 
+
+    - *IBM Sample Voice mp3 file* [link](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMSkillsNetwork-GPXX04C6EN/Testing%20speech%20to%20text.mp3)
 
 - Build Chatbot For your data module
     - Frontend template: [BuildChatbotForYourData](https://github.com/sinanazeri/build_own_chatbot_without_open_ai.git)
+
+    - Sample pdf file: [Sample pdf](https://abc.xyz/assets/d9/85/b7649a9f48c4960adbce5bd9fb54/20220202-alphabet-10k.pdf)
