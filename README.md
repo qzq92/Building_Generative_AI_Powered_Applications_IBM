@@ -14,7 +14,7 @@ Repository containing codebase covering various GenAI module applications based 
     - Frontend interface supported by HTML, Javascript and Flask scripts
     - Backend chat service supported by the use of Speech-to-Text, Text-to-Speech and OpenAI Chat Models
 
-## Environment file to create and edit
+## Environment file to create and edit for different applications
 
 The *.env* file containing environment variables will be referenced by all modules in this repo. Here are the default settings for quickstart.
 
@@ -65,13 +65,17 @@ HUGGINGFACE_TTS_MODEL_TEMPERATURE = "0.0"
 # Config for using HuggingFace TTS API calls. Indicate a string value to enable.call.
 TTS_API_CALL_ENABLED = ""
 
-
 # -----------------------------------------------------------------------
-# For Buildchatbotforyourdata to perform Question-Answering on your document based on RAG approach
+# For Buildchatbotforyourdata to perform Question-Answering on your document based on RAG approach.
 HUGGINGFACE_QA_LLM_MODEL = "tiiuae/falcon-7b-instruct"
 HUGGINGFACE_DOCUMENT_EMBEDDINGS_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 DOCUMENT_CHUNK_SIZE = "1024"
 DOCUMENT_CHUNK_OVERLAP = "64"
+
+# -----------------------------------------------------------------------
+# For TranslatorAppForEnglish to perform language translation.
+LANGUAGE_TO_TRANSLATE_FROM_ENGLISH = "French"
+
 
 # Gradio Config for GRADIO_SERVER_NAME DEFAULTS TO 127.0.0.1 if empty. GRADIO_SERVER_PORT DEFAULTS to 7860 if empty.
 GRADIO_SERVER_NAME = "127.0.0.1"
@@ -102,6 +106,8 @@ conda env create -f environment.yml
 
 Upon installation and environment exectuion, please run the relevant command based on the app required to run.
 
+The following number sections describes some of the simple apps built. Configuration required for these apps are described in the .env file content above. Note that they are to be run on your computer for experimentation purposes and are not intended to be PRODUCTION ready.
+
 ### 1. Image Captioning
 
 ```
@@ -126,11 +132,14 @@ cd ImageCaption/
 python imagecaptioning.py
 ```
 
+**Disclaimer and limitations**
+1.  As this is just a simple exploration project, the captioning output is not meant to be provide perfectly great responses and the result of such is largely dependent on the configurations.
+
+
 ### 2. Simple Chatbot
 
 Suggested chatbot model from HuggingFace that can be loaded on to your PC would be *facebook/blenderbot-400M-distill*. It is known to outperforms existing models in terms of longer conversations over multiple sessions and is more knowledgeable and has more factual consistency, according to human evaluators. (Source: [ParlAI](https://parl.ai/projects/blenderbot2/#:~:text=A%20chatbot%20with%20its%20own,consistency%2C%20according%20to%20human%20evaluators.))
 
-**Disclaimer: You may need to configure *TEMPERATURE* environment to control chatbot responses. As this is just a simple project, the chatbot is not meant to be provide perfectly great responses and the result of such is largely dependent on the input chat message provided and other model configurations.**
 
 ```
 cd Chatbot/
@@ -157,6 +166,13 @@ Ensure that you have executed above command to get flask running. Then execute a
 ```
 curl -X POST -H "Content-Type: application/json" -d '{"prompt": "Hello, how are you today?"}' <Flask Server Host>:<Port>/chatbot
 ```
+
+**Disclaimer and limitations**
+1.  As this is just a simple exploration project, the chatbot is not meant to be provide perfectly great responses and the result of such is largely dependent on the input chat message and other model configurations.
+
+2. As the chat progresses, expect performance degradation like slower repsonse time or lag as the entire process is executed on your PC.
+
+
 ## 3. Simple VoiceAssistant application
 
 This is a UI powered VoiceAssistant application that enables you to chat with a Chatbot via text or audio inputs.
@@ -184,7 +200,6 @@ Generated audio files are found in *bot_audio/* folder during execution of the r
 1. HuggingFaceHub Model inference endpoint may not be available at times. As such, you may want to experiment with text to speech models offline by setting the environment variables as follows:
 ```
 TTS_API_CALL_ENABLED = ""
-**
 ```
 
 2. As this is a technical exploration/experimentation work, Audio transcription may be inaccurate or up to expectations. You may randomy encounter the following error as a result of converting audio inputs to numerical values for transcription due to short speech or interference from surrounding:
@@ -227,7 +242,7 @@ You may can either upload your own mp3 file or use a sample mp3 file provided un
 
 2. There is no async/await implementation for the implementation, so outputs would take sometime to generate.
 
-### 5. Chatbot for your data
+### 5. Chatbot for your data with RAG
 
 This is a simple chatbot app built using Flask, a popular web framework, and the Langchain, another popular framework for working wtih Large Language Models (LLMs). The chatbot interacts with users via text but also comprehend and answer questions related to the content of a specific pdf document with the help of Retrieval Augmented Generation (RAG).
 
@@ -265,6 +280,15 @@ When the app is up, you may upload your own pdf to try or test it out with the p
 
 3. Prompt used for the chatbot may not be optimal and are tailored to limit output to short summary/sentences, hence do not expect lengthy responses. 
 
+### 6. Simple translator app for english
+
+This is a UI powered simple translator app built to translate english text/voice input to other languages. The codebase is similar to [Simple VoiceAssistant application](#3-simple-voiceassistant-application). It is served via Flask framework, together with the use of html, css and javascript. For 
+
+Supported text-to-speech languages by Suno/Bark model is found in the following [link](https://suno-ai.notion.site/8b8e8749ed514b0cbf3f699013548683?v=bc67cff786b04b50b3ceb756fd05f68c)
+
+The *language_bark_mapping.py* contains the mapping of language name to its language code name. Language not supported are not indicated in the script.
+
+
 ## Programming languages/tools involved
 - Python
 - HTML/CSS/Javascript (files provided by course, with some edits)
@@ -280,6 +304,7 @@ When the app is up, you may upload your own pdf to try or test it out with the p
         - Speech-to-text: *distil-whisper/distil-large-v3*
         - Image Captioning: *Salesforce/blip-image-captioning-large*
         - Document Embedding: *sentence-transformers/all-MiniLM-L6-v2*
+        - Text translation
     - HuggingFace pipeline,
 - Concurrence library
     - Multiprocessing with 10 threads for image captioning
@@ -288,7 +313,7 @@ When the app is up, you may upload your own pdf to try or test it out with the p
 [Leaderboard of Document Embedding Models](https://huggingface.co/spaces/mteb/leaderboard)
 
 
-## Troubleshooting notes/ Gradio errors that does not affect functionality
+## Error encounters/Troubleshooting notes/ Gradio errors that does not affect functionality
 
 1. To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to see activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
 
@@ -296,7 +321,7 @@ When the app is up, you may upload your own pdf to try or test it out with the p
 
 3. Gradio reporting *PermissionError: [Errno 13] Permission denied: < Temp file directory > when performing file upload through Gradio Interface in IDE. This does not affect the necessary transcription and summarisation flow of "4.Speech Transcription Summarizer." This can be resolved by executing with admin rights.
 
-4. Use of HuggingFaceInstructEmbeddings results in *TypeError: INSTRUCTOR._load_sbert_model() got an unexpected keyword argument 'token'* caused by  *sentence-transformers*>2.2.2 dependency. To workaround, HuggingFaceEmbeeding library was used instead
+4. Use of HuggingFaceInstructEmbeddings results in *TypeError: INSTRUCTOR._load_sbert_model() got an unexpected keyword argument 'token'* caused by  *sentence-transformers*>2.2.2 dependency. To workaround, HuggingFaceEmbeeding library was used instead.
 
 ```
 pip install git+https://github.com/SilasMarvin/instructor-embedding.git@silas-update-for-newer-sentence-transformers
@@ -326,9 +351,12 @@ Additional acknowledgement for different sections:
 
     - *IBM Sample Voice mp3 file* [link](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMSkillsNetwork-GPXX04C6EN/Testing%20speech%20to%20text.mp3)
 
+    - mixtral-8x7b-instruct-comprehensive-guide [link](https://blog.unrealspeech.com/mixtral-8x7b-instruct-comprehensive-guide/)
+
 - Build Chatbot For your data module
     - Frontend template: [BuildChatbotForYourData](https://github.com/sinanazeri/build_own_chatbot_without_open_ai.git)
 
     - Sample pdf file: [Sample pdf](https://abc.xyz/assets/d9/85/b7649a9f48c4960adbce5bd9fb54/20220202-alphabet-10k.pdf)
 
     - GitHub issue/ workaround solution for "Troubleshooting notes/ Gradio errors that does not affect functionality" section: [GitHub Issue](https://github.com/UKPLab/sentence-transformers/issues/2567)
+ 
