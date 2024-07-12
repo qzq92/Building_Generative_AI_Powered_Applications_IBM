@@ -6,7 +6,6 @@ import uuid
 import base64
 from VoiceAssistant.worker import speech_to_text, text_to_speech, process_message
 import soundfile as sf
-import shutil
 
 # Define Flask app
 app = Flask(__name__)
@@ -65,7 +64,10 @@ def process_message_route():
     audio_file = str(random_uuid) + ".wav"
 
     # Define save path
-    audio_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_audio")
+    audio_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "bot_audio"
+    )
     os.makedirs(audio_dir, exist_ok=True)
     save_audio_path = os.path.join(audio_dir, audio_file)
     print("Writing speech file")
