@@ -163,7 +163,7 @@ const populateBotResponse = async (userMessage) => {
   //Get random button ID associated for button associated with playing bot response audio. Map button ID to index of response
   // const repeatButtonID = getRandomID();
 
-  const repeatButtonID = response.ResponseID
+  const repeatButtonID = response.ResponseID;
   botRepeatButtonIDToIndexMap[repeatButtonID] = responses.length - 1;
 
 
