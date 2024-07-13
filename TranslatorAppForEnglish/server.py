@@ -3,10 +3,15 @@ import os
 import uuid
 import base64
 import soundfile as sf
+
+from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from flask_cors import CORS
 from TranslatorAppForEnglish.worker import speech_to_text, text_to_speech, process_message
 from language_bark_mapping import language_mapping
+
+# Load env
+load_dotenv()
 
 # Define Flask app
 app = Flask(__name__)
@@ -20,12 +25,7 @@ def index():
 
 # Logic route to process speech input request
 @app.route('/speech-to-text', methods=['POST'])
-def speech_to_text_route() -> str:
-    """Function which calls the worker's speech_to_text function to perform transcription and returns the transcribed results.
-
-    Returns:
-        str: Transcribed speech.
-    """
+def speech_to_text_route():
     audio_binary = request.data # Get the user's speech from their request
     print(request)
     # Call speech_to_text function to transcribe the speech which returns a text string
@@ -53,7 +53,10 @@ def process_message_route():
         default="French"
     ).title()
 
-    if language_selected not in language_selected
+    if language_selected not in language_mapping.keys():
+        print("Unsupport languaged found. Defaulting to French")
+        language_selected = "French"
+
     response_text = process_message(
         user_message=user_message,
         language_to_translate_to=language_selected
