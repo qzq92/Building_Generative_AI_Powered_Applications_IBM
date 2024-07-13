@@ -115,6 +115,8 @@ Refer to [cuDNN Archive link](https://developer.nvidia.com/rdp/cudnn-archive) fo
 For Windows/Linux User:
 Refer to [cuDNN installation link for Windows](https://docs.nvidia.com/deeplearning/cudnn/latest/installation/windows.html) [cuDNN installation link for Linux](https://docs.nvidia.com/deeplearning/cudnn/latest/installation/linux.html) on installation process.
 
+Upon downloading cuDNN files, refer to this [article](https://medium.com/geekculture/install-cuda-and-cudnn-on-windows-linux-52d1501a8805) for path pointing and the destination folder of where such files are to be placed as the one indicated by NVIDIA is wrong for Windows.
+
 ## Execution of various applications
 Upon installation and environment exectuion, please run the relevant command based on the app of interest.
 
@@ -226,6 +228,8 @@ ValueError: buffer size must be a multiple of element size
     - Text generation: OpenAI Chat models and mistralai/Mixtral-8x7B-Instruct-v0.1 model
     - TTS models: Microsoft's SpeechT5 and Suno/Bark model variants
 
+5. It will take sometime for text and audio output to generate if you are using CPU.
+
 ### 4. Speech Transcription Summarizer
 
 This is a simple Gradio UI Powered Speech Transcription tool that serves to summarise a an uploaded meeting speech file which is to be transcribed powered by LLM models involving "distil-whisper/distil-large-v3 model" for transcription and Meta's "meta-llama/Llama-2-7b-chat-hf" LLM model for summarsing transcribed speech.
@@ -251,7 +255,7 @@ Sample audio file transcription from file:
 
 You may can either upload your own mp3 file or use a sample mp3 file provided under *Speech_Summarizer/sample_mp3_files* folder.
 
-2. There is no async/await implementation for the implementation, so outputs would take sometime to generate.
+2. There is no async/await implementation for the implementation, so outputs would take sometime to generate, especially for non-GPU PCs.
 
 ### 5. Chatbot for your data with RAG
 
@@ -313,7 +317,7 @@ A working example involving translating Hello into French and German respectivel
 
 2. Expect text output issues for non latin characters due to browser limitation of language support limitation by the model or your computer.
 
-
+3. It will take sometime for text and audio output to generate if you are using CPU.
 
 ## Programming languages/tools involved
 - Python

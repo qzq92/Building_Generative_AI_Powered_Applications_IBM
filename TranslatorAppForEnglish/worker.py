@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from langchain_core.prompts import  PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
-from transformers import pipeline, AutoModelForSpeechSeq2Seq, AutoProcessor, BarkModel
+from transformers import pipeline, AutoModelForSpeechSeq2Seq, AutoProcessor, BarkModel, BitsAndBytesConfig
 from language_bark_mapping import language_mapping
 from typing import Tuple
 import os
@@ -107,13 +107,16 @@ def text_to_speech(input_text: str, language_to_translate_to: str) -> Tuple[np.n
     try:
         model = BarkModel.from_pretrained(
             pretrained_model_name_or_path=default_model,
-            device_map = "auto",
-            load_in_8bit=True
+            device_map=DEVICE,
+            quantization_config = BitsAndBytesConfig(
+                load_in_8bit=True, bnb_4bit_compute_dtype=torch.bfloat16
+            )
         )
     except RuntimeError:
         model = BarkModel.from_pretrained(
             pretrained_model_name_or_path=default_model,
-            device_map = "auto",
+            device_map=DEVICE,
+            torch_dtype=TORCH_DTYPE
         )
     if DEVICE == "cuda:0":
         model.enable_cpu_offload()
