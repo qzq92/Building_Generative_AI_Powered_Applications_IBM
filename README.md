@@ -112,6 +112,9 @@ Refer to [CUDA installation link](https://pytorch.org/get-started/locally/) on s
 cuDNN library: v8.9.7
 Refer to [cuDNN Archive link](https://developer.nvidia.com/rdp/cudnn-archive) for download and installation. Requires Nvidia Developer account to download and install.
 
+For Windows/Linux User:
+Refer to [cuDNN installation link for Windows](https://docs.nvidia.com/deeplearning/cudnn/latest/installation/windows.html) [cuDNN installation link for Linux](https://docs.nvidia.com/deeplearning/cudnn/latest/installation/linux.html) on installation process.
+
 ## Execution of various applications
 Upon installation and environment exectuion, please run the relevant command based on the app of interest.
 
