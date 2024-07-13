@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from flask_cors import CORS
 from TranslatorAppForEnglish.worker import speech_to_text, text_to_speech, process_message
-from language_bark_mapping import language_mapping
 
 # Load env
 load_dotenv()
