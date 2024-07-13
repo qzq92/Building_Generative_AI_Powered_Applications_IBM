@@ -24,7 +24,7 @@
           <h1 class="text-center">Simple Language Translator Application</h1>
           <p class="text-center" style="font-size: 20px">
             Your personal language translatior powered by HuggingFace speech-to-text, text generation and text-to-speech models.
-            Select from the dropdown menu below to decide on the language you want your input to be translated to.
+            Select from the dropdown menu below to decide on the language you want your input to be translated to. Defaults to French if no selection is made.
           </p>
         </div>
         <div class="col-12" style="font-size: 16px">
@@ -48,6 +48,7 @@
               >Choose a language to translate to</label
             >
             <select id="language-options">
+              <option value="">""</option>
               <option value="Chinese">Chinese</option>
               <option value="English">English</option>
               <option value="French">French</option>
