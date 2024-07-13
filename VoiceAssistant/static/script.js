@@ -1,7 +1,6 @@
 let lightMode = true;
 let recorder = null;
 let recording = false;
-let voiceOption = "default";
 const responses = [];
 const botRepeatButtonIDToIndexMap = {};
 const userRepeatButtonIDToRecordingMap = {};
@@ -42,7 +41,7 @@ const processUserMessage = async (userMessage) => {
   let response = await fetch(baseUrl + "/process-message", {
     method: "POST",
     headers: { Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify({ userMessage: userMessage, voice: voiceOption }),
+    body: JSON.stringify({ userMessage: userMessage}),
   });
   response = await response.json();
   console.log(response);
@@ -250,10 +249,5 @@ $(document).ready(function () {
     $(".loading-dots").toggleClass("dark");
     $(".dot").toggleClass("dark-dot");
     lightMode = !lightMode;
-  });
-
-  $("#voice-options").change(function () {
-    voiceOption = $(this).val();
-    console.log(voiceOption);
   });
 });
