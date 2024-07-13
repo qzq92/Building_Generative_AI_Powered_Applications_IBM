@@ -144,7 +144,7 @@ def process_message(user_message: str, language_to_translate_to:str) -> str:
         str: Langchain LLM completion.
     """
     
-    prompt_str = f"You are an assistant helping translate sentences from English into {language_to_translate_to}. Translate the Query below."
+    prompt_str = f"You are a language assistant helping translate sentences from English into {language_to_translate_to}. Translate the Query below directly and keep it concise."
 
     # Get template
     template, llm = get_mistral_prompt_and_llm()
