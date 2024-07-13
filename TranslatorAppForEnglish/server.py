@@ -49,7 +49,8 @@ def process_message_route():
     # Call openai_process_message function to process the user's message and get a response back
 
     language_selected = request.json['languageOption']
-
+    if language_selected == "":
+        language_selected = "French"
     response_text = process_message(
         user_message=user_message,
         language_to_translate_to=language_selected
