@@ -9,6 +9,8 @@ __pycache__/
 # Env file
 .env
 
+*/bot_audio
+
 # Distribution / packaging
 .Python
 build/
