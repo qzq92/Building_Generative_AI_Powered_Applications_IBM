@@ -19,12 +19,7 @@ def index():
 
 # Logic route to process speech input request
 @app.route('/speech-to-text', methods=['POST'])
-def speech_to_text_route() -> str:
-    """Function which calls the worker's speech_to_text function to perform transcription and returns the transcribed results.
-
-    Returns:
-        str: Transcribed speech.
-    """
+def speech_to_text_route():
     audio_binary = request.data # Get the user's speech from their request
     print(request)
     # Call speech_to_text function to transcribe the speech which returns a text string
