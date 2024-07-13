@@ -2,18 +2,18 @@
 
 Repository containing codebase covering various GenAI module applications based on "Building Generative AI-Powered Applications with Python" Coursera Course organised by IBM. 
 
-1. Image Captioning
-    - Gradio Interface UI for uploading image to perform captioning
-    - Python script for generating captions on all available images retrieved from a specified UI.
+1. [Image Captioning](#1-image-captioning)
 
-2. Simple Chatbot
-    - Frontend interface supported by HTML, Javascript and Flask scripts
-    - Backend chat service supported by the use of HuggingFaceHub model loaded into PC.
+2. [Simple Chatbot](#2-simple-chatbot)
 
-3. Voice Assistant Chatbot
-    - Frontend interface supported by HTML, Javascript and Flask scripts
-    - Backend chat service supported by the use of Speech-to-Text, Text-to-Speech and OpenAI Chat Models
+3. [Simple Voice Assistant App](#3-simple-voiceassistant-application)
 
+4. [Speech transcription Summarizer](#4-speech-transcription-summarizer)
+
+5. [Chatbot with personal data](#5-chatbot-for-your-data-with-rag)
+
+6. [Simple translator app for english](#6-simple-translator-app-for-english
+)
 ## Environment file to create and edit for different applications
 
 The *.env* file containing environment variables will be referenced by all modules in this repo. Here are the default settings for quickstart.
@@ -104,7 +104,16 @@ Please use Anaconda distribution to install the necessary libraries with the fol
 conda env create -f environment.yml
 ```
 
-Upon installation and environment exectuion, please run the relevant command based on the app required to run.
+### *For those who have GPU:*
+CUDA version: 12.1 
+(for Pytorch framework supporting LLM models used)
+Refer to [CUDA installation link](https://pytorch.org/get-started/locally/) on setup and also pip installation of torch libraries for your environment
+
+cuDNN library: v8.9.7
+Refer to [cuDNN Archive link](https://developer.nvidia.com/rdp/cudnn-archive) for download and installation. Requires Nvidia Developer account to download and install.
+
+## Execution of various applications
+Upon installation and environment exectuion, please run the relevant command based on the app of interest.
 
 The following number sections describes some of the simple apps built. Configuration required for these apps are described in the .env file content above. Note that they are to be run on your computer for experimentation purposes and are not intended to be PRODUCTION ready.
 
@@ -217,7 +226,6 @@ ValueError: buffer size must be a multiple of element size
 ### 4. Speech Transcription Summarizer
 
 This is a simple Gradio UI Powered Speech Transcription tool that serves to summarise a an uploaded meeting speech file which is to be transcribed powered by LLM models involving "distil-whisper/distil-large-v3 model" for transcription and Meta's "meta-llama/Llama-2-7b-chat-hf" LLM model for summarsing transcribed speech.
-
 
 A sample IBM meeting speech audio file is provided under the folder *sample_mp3_files* folder.
 
