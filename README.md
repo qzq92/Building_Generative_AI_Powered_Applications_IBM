@@ -284,9 +284,24 @@ When the app is up, you may upload your own pdf to try or test it out with the p
 
 This is a UI powered simple translator app built to translate english text/voice input to other languages. The codebase is similar to [Simple VoiceAssistant application](#3-simple-voiceassistant-application). It is served via Flask framework, together with the use of html, css and javascript. For 
 
-Supported text-to-speech languages by Suno/Bark model is found in the following [link](https://suno-ai.notion.site/8b8e8749ed514b0cbf3f699013548683?v=bc67cff786b04b50b3ceb756fd05f68c)
-
 The *language_bark_mapping.py* contains the mapping of language name to its language code name. Language not supported are not indicated in the script.
+
+
+Select the language you want to translate to via the dropdown option in the UI as shown below.
+
+![SampleTranslatorApp](images/SampleTranslatorApp.png)
+
+A working example involving translating Hello into French and German respectively is as shown
+
+![SampleTranslatorAppWorking](images/SampleTranslatorAppWorking.png)
+
+
+**Disclaimer and limitations**
+
+1. Do expect inaccuracies in terms of translation this is just an experimentation work on using existing pretrained models.
+
+2. Expect text output issues for non latin characters due to browser limitation of language support limitation by the model or your computer.
+
 
 
 ## Programming languages/tools involved
@@ -353,10 +368,14 @@ Additional acknowledgement for different sections:
 
     - mixtral-8x7b-instruct-comprehensive-guide [link](https://blog.unrealspeech.com/mixtral-8x7b-instruct-comprehensive-guide/)
 
-- Build Chatbot For your data module
+- Build Chatbot For Your Data module
     - Frontend template: [BuildChatbotForYourData](https://github.com/sinanazeri/build_own_chatbot_without_open_ai.git)
 
     - Sample pdf file: [Sample pdf](https://abc.xyz/assets/d9/85/b7649a9f48c4960adbce5bd9fb54/20220202-alphabet-10k.pdf)
 
     - GitHub issue/ workaround solution for "Troubleshooting notes/ Gradio errors that does not affect functionality" section: [GitHub Issue](https://github.com/UKPLab/sentence-transformers/issues/2567)
  
+ - Translator App Module
+    - Webpage template: [IBM's translator-with-voice-and-watsonx Github Repository](https://github.com/ibm-developer-skills-network/translator-with-voice-and-watsonx)
+
+    - Supported language by Suno Bark model: [Suno Bark Speaker Library](https://suno-ai.notion.site/8b8e8749ed514b0cbf3f699013548683?v=bc67cff786b04b50b3ceb756fd05f68c)
