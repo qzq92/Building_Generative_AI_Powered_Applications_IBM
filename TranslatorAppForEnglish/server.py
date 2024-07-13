@@ -48,14 +48,7 @@ def process_message_route():
 
     # Call openai_process_message function to process the user's message and get a response back
 
-    language_selected = os.environ.get(
-        "LANGUAGE_TO_TRANSLATE_FROM_ENGLISH",
-        default="French"
-    ).title()
-
-    if language_selected not in language_mapping.keys():
-        print("Unsupport languaged found. Defaulting to French")
-        language_selected = "French"
+    language_selected = request.json['languageOption']
 
     response_text = process_message(
         user_message=user_message,
