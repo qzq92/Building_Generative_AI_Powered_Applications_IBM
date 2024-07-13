@@ -110,8 +110,6 @@ def text_to_speech(input_text: str, language_to_translate_to: str) -> Tuple[np.n
     processor = AutoProcessor.from_pretrained(
         pretrained_model_name_or_path=default_model, torch_dtype=TORCH_DTYPE
     )
-    # performs kernel fusion under the hood. You can gain 20% to 30% in speed with zero performance degradation.
-    model = model.to_bettertransformer()
     
     # Offload idle submodels if using CUDA
     if DEVICE == "cuda:0":
