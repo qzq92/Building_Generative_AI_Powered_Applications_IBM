@@ -103,13 +103,18 @@ def text_to_speech(input_text: str, language_to_translate_to: str) -> Tuple[np.n
     default_model = "suno/bark"
     print(f"Running inference with {default_model}")
     
-    # Generate model/processor
-    model = BarkModel.from_pretrained(
-        pretrained_model_name_or_path=default_model,
-        device_map = "auto",
-        load_in_8bit=True
-    )
-
+    # Generate model/processor based on whether cuda is available
+    try:
+        model = BarkModel.from_pretrained(
+            pretrained_model_name_or_path=default_model,
+            device_map = "auto",
+            load_in_8bit=True
+        )
+    except RuntimeError:
+        model = BarkModel.from_pretrained(
+            pretrained_model_name_or_path=default_model,
+            device_map = "auto",
+        )
     if DEVICE == "cuda:0":
         model.enable_cpu_offload()
 
