@@ -13,7 +13,8 @@ import numpy as np
 load_dotenv()
 
 DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
-TORCH_DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
+TORCH_DTYPE = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+
 
 def get_mistral_prompt_and_llm()-> Tuple[str, HuggingFaceEndpoint]:
     """Function which returns preconstructed prompt template required by 
@@ -97,7 +98,6 @@ def text_to_speech(input_text: str, language_to_translate_to: str) -> Tuple[np.n
     Returns:
         Tuple[np.ndarray,int]: Generated speech values in numpy array and corresponding sampling rate based on TTS model used.
     """
-
     voice_preset = language_mapping[language_to_translate_to]
 
     default_model = "suno/bark"
@@ -105,16 +105,21 @@ def text_to_speech(input_text: str, language_to_translate_to: str) -> Tuple[np.n
     
     # Generate model/processor
     model = BarkModel.from_pretrained(
-        pretrained_model_name_or_path=default_model,torch_dtype=TORCH_DTYPE
+        pretrained_model_name_or_path=default_model,
+        device_map = "auto",
+        load_in_8bit=True
     )
+
+    if DEVICE == "cuda:0":
+        model.enable_cpu_offload()
+
+    # enable BetterTransformer
+    model = model.to_bettertransformer()
+
     processor = AutoProcessor.from_pretrained(
         pretrained_model_name_or_path=default_model, torch_dtype=TORCH_DTYPE
     )
     
-    # Offload idle submodels if using CUDA
-    if DEVICE == "cuda:0":
-        model.enable_cpu_offload()
-
     # Tokenize and encode th e text prompt
     inputs = processor(
         text=[input_text],
@@ -129,7 +134,6 @@ def text_to_speech(input_text: str, language_to_translate_to: str) -> Tuple[np.n
     sampling_rate= model.generation_config.sample_rate
 
     return speech_array, sampling_rate
-
 
 def process_message(user_message: str, language_to_translate_to:str) -> str:
     """Function which conducts message translation processing using 'mistralai/Mixtral-8x7B-Instruct-v0.1' model, supported by the custom prompt format required.
