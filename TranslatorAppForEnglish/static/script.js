@@ -1,7 +1,7 @@
 let lightMode = true;
 let recorder = null;
 let recording = false;
-let voiceOption = "default";
+let languageOption = "French";
 const responses = [];
 const botRepeatButtonIDToIndexMap = {};
 const userRepeatButtonIDToRecordingMap = {};
@@ -40,7 +40,7 @@ const processUserMessage = async (userMessage) => {
   let response = await fetch(baseUrl + "/process-message", {
     method: "POST",
     headers: { Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify({ userMessage: userMessage, voice: voiceOption }),
+    body: JSON.stringify({ userMessage: userMessage, language: languageOption }),
   });
   response = await response.json();
   console.log(response);
@@ -239,8 +239,8 @@ $(document).ready(function () {
     lightMode = !lightMode;
   });
 
-  $("#voice-options").change(function () {
-    voiceOption = $(this).val();
-    console.log(voiceOption);
+  $("#language-options").change(function () {
+    languageOption = $(this).val();
+    console.log(languageOption);
   });
 });
